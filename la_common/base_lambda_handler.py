@@ -9,7 +9,6 @@ import traceback
 from abc import ABC, abstractmethod
 
 import boto3
-import email_util
 from la_utils import log_object
 
 
