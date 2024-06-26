@@ -37,9 +37,15 @@ def main():
     _run_command(bash_command, shell=True)
 
     print("*** Installing Python requirements...")
-    os.chmod("install-python-requirements.sh", 0o755)
-    _run_command(["./install-python-requirements.sh"])
-
+    # os.chmod("install-python-requirements.sh", 0o755)
+    # _run_command(["./install-python-requirements.sh"])
+    # getting the current file directory
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    # append the file name to the current file directory
+    install_python_requirements_script = os.path.join(current_file_dir, "la_install_reqs.py")
+    # calling la_install_reqs.py
+    _run_command(f"python3.11 {install_python_requirements_script}", shell=True)
+    
     print("*** All done!!!")
 
 
