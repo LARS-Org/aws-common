@@ -1,7 +1,20 @@
 """Recreates the Python virtual environment for the project."""
 import os
 import shutil
-from la_common.la_utils import run_command
+import subprocess
+import sys
+
+def _run_command(command, cwd=None, shell=False):
+    """
+    Run a shell command in the specified directory.
+
+    :param command: The command to run.
+    :param cwd: The directory to run the command in.
+    :param shell: Whether to use a shell to run the command.
+    """
+    result = subprocess.run(command, shell=shell, cwd=cwd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)   
 
 def main():
     PYTHON_VENV_DIR = ".venv/"
@@ -10,7 +23,7 @@ def main():
     shutil.rmtree(PYTHON_VENV_DIR, ignore_errors=True)
 
     print("*** Recreating Python virtual environment...")
-    run_command(["python3.11", "-m", "venv", ".venv"])
+    _run_command(["python3.11", "-m", "venv", ".venv"])
 
     print("*** Activating Python virtual environment...")
     activate_script = os.path.join(PYTHON_VENV_DIR, "bin", "activate")
@@ -18,7 +31,7 @@ def main():
 
     # Use bash explicitly to source the activation script
     bash_command = f"bash -c 'source {activate_script}'"
-    run_command(bash_command, shell=True)
+    _run_command(bash_command, shell=True)
 
     print("*** Installing Python requirements...")
     # os.chmod("install-python-requirements.sh", 0o755)
@@ -28,7 +41,7 @@ def main():
     # append the file name to the current file directory
     install_python_requirements_script = os.path.join(current_file_dir, "la_install_reqs.py")
     # calling la_install_reqs.py
-    run_command(f"python3.11 {install_python_requirements_script}", shell=True)
+    _run_command(f"python3.11 {install_python_requirements_script}", shell=True)
     
     print("*** All done!!!")
 

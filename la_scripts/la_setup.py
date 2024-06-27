@@ -7,16 +7,17 @@ import subprocess
 import sys
 
 
-def _run_command(command, cwd=None):
+def _run_command(command, cwd=None, shell=False):
     """
     Run a shell command in the specified directory.
 
     :param command: The command to run.
     :param cwd: The directory to run the command in.
+    :param shell: Whether to use a shell to run the command.
     """
-    result = subprocess.run(command, shell=True, cwd=cwd)
+    result = subprocess.run(command, shell=shell, cwd=cwd)
     if result.returncode != 0:
-        sys.exit(result.returncode)
+        sys.exit(result.returncode)   
 
 
 def setup_venv(current_dir: str, script_dir: str):

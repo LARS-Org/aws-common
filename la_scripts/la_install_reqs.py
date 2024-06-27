@@ -1,13 +1,26 @@
 import os
 import shutil
-from la_common.la_utils import run_command
+import subprocess
+import sys
 
+
+def _run_command(command, cwd=None, shell=False):
+    """
+    Run a shell command in the specified directory.
+
+    :param command: The command to run.
+    :param cwd: The directory to run the command in.
+    :param shell: Whether to use a shell to run the command.
+    """
+    result = subprocess.run(command, shell=shell, cwd=cwd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)   
 
 def purge_pip_cache():
     """
     Purge the pip cache to avoid potential installation issues.
     """
-    run_command(["python3.11", "-m", "pip", "cache", "purge"])
+    _run_command(["python3.11", "-m", "pip", "cache", "purge"])
     print("*** Purged pip cache.")
 
 def remove_pip_selfcheck():
@@ -23,7 +36,7 @@ def upgrade_pip():
     """
     Upgrade pip to the latest version.
     """
-    run_command(["pip", "install", "--upgrade", "pip", "--quiet"])
+    _run_command(["pip", "install", "--upgrade", "pip", "--quiet"])
     print("*** Upgraded pip.")
 
 def install_essential_git_repositories(target=None):
@@ -41,7 +54,7 @@ def install_essential_git_repositories(target=None):
         if target:
             cmd_list.append("--target")
             cmd_list.append(target)
-        run_command(cmd_list)
+        _run_command(cmd_list)
 
 def install_requirements_recursively():
     """
@@ -66,7 +79,7 @@ def install_requirements_recursively():
         if pip_requirements_file in files:
             pip_requirements_path = os.path.join(root, pip_requirements_file)
             print(f"Installing {pip_requirements_path} (will be quiet)...")
-            run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
+            _run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
 
         # Special handling for AWS Lambda Functions
         if files and root.startswith(("lambda", "./lambda")):
@@ -83,12 +96,12 @@ def install_requirements_recursively():
             if pip_requirements_file in files:
                 print(f"Installing {pip_requirements_path} (will be quiet)...")
                 # install the requirements in the packages directory
-                run_command(["pip", "install", "-r", pip_requirements_path, 
+                _run_command(["pip", "install", "-r", pip_requirements_path, 
                               "--target", packages_dir, "--upgrade", "--quiet"])
 
         # Special handling for AWS Lambda Layers
         if root.startswith(("layers", "./layers")):
-            run_command(["pip", "install", "-r", pip_requirements_path, 
+            _run_command(["pip", "install", "-r", pip_requirements_path, 
                             "--target", os.path.join(root, "lib/python3.11/site-packages"), "--upgrade", "--quiet"])
 
 def install_other_packages():
@@ -103,7 +116,7 @@ def install_other_packages():
     
     for package in other_packages:
         print(f"*** Installing/upgrading {package} (will be quiet)...")
-        run_command(["pip", "install", "--upgrade", package, "--quiet"])
+        _run_command(["pip", "install", "--upgrade", package, "--quiet"])
 
 def main():
     purge_pip_cache()
