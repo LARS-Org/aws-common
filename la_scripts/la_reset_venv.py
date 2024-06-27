@@ -17,7 +17,7 @@ def _run_command(command, cwd=None, shell=False):
         sys.exit(result.returncode)   
 
 def main():
-    PYTHON_VENV_DIR = ".venv/"
+    PYTHON_VENV_DIR = "venv/"
 
     print(f"*** Deleting all content under {PYTHON_VENV_DIR}...")
     shutil.rmtree(PYTHON_VENV_DIR, ignore_errors=True)
