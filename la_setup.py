@@ -69,6 +69,19 @@ def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct path to sibling directory
     script_dir = os.path.join(current_dir, '..', 'la-common')
+   
+    # check if script directory exists
+    if not os.path.exists(script_dir):
+        print(f"Script directory not found: {script_dir}")
+        # call the git clone command
+        parent_dir = os.path.join(current_dir, '..')
+        _run_command(f"git clone https://github.com/LearnAnything-Organization/la-common.git", cwd=parent_dir)
+        print(f"Cloned the la-common repository to {script_dir}")
+    # script directory exists, update it
+    # call the git pull command to ensure the latest version
+    _run_command("git fetch", cwd=script_dir)
+    _run_command("git pull", cwd=script_dir)
+    print(f"Updated the la-common repository at {script_dir}")
 
     # Map action to corresponding function
     if action == "--setup_venv":
