@@ -27,25 +27,25 @@ def reset_venv():
     print("*** Recreating Python virtual environment...")
     _run_command(["python3.11", "-m", "venv", PYTHON_VENV_DIR])
 
-    print("*** Activating Python virtual environment...")
+    # print("*** Activating Python virtual environment...")
     activate_script = os.path.join(PYTHON_VENV_DIR, "bin", "activate")
 
 
-    # Create a temporary shell script to activate the virtual environment
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.sh') as temp_script:
-        temp_script.write(f"#!/bin/bash\n")
-        temp_script.write(f"source {activate_script}\n")
-        temp_script.write(f"exec $SHELL\n")
-        temp_script_path = temp_script.name
+    # # Create a temporary shell script to activate the virtual environment
+    # with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.sh') as temp_script:
+    #     temp_script.write(f"#!/bin/bash\n")
+    #     temp_script.write(f"source {activate_script}\n")
+    #     temp_script.write(f"exec $SHELL\n")
+    #     temp_script_path = temp_script.name
 
-    # Make the script executable
-    os.chmod(temp_script_path, 0o775)
+    # # Make the script executable
+    # os.chmod(temp_script_path, 0o775)
 
-    # Execute the temporary shell script
-    subprocess.run(f"bash {temp_script_path}", shell=True)
+    # # Execute the temporary shell script
+    # subprocess.run(f"bash {temp_script_path}", shell=True)
 
-    # remove the temporary shell script
-    os.remove(temp_script_path)
+    # # remove the temporary shell script
+    # os.remove(temp_script_path)
     
     # warn the user to activate the virtual environment
     print("*** Virtual environment recreated! Please activate it by running:")
