@@ -1,4 +1,1 @@
-aws-cdk-lib==2.147.1
-constructs==10.3.0
 resend==2.1.0
-#boto3==1.34.131
