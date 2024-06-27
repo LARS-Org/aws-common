@@ -26,21 +26,22 @@ def upgrade_pip():
     run_command(["pip", "install", "--upgrade", "pip", "--quiet"])
     print("*** Upgraded pip.")
 
-def install_essential_packages():
+def install_essential_git_repositories(target=None):
     """
-    Install essential pip packages required by the project.
+    Installs/upgrades essential modules dependencies directly from GitHub.
+    # pip install git+https://github.com/LearnAnything-Organization/la-common    
     """
-    essential_packages = [
-        "h5py",
-        "typing-extensions",
-        "wheel",
-        "setuptools",
-        "aws-sam-cli"
+    essential_git_repos = [
+        "https://github.com/LearnAnything-Organization/la-common",
     ]
     
-    for package in essential_packages:
-        print(f"*** Installing/upgrading {package} (will be quiet)...")
-        run_command(["pip", "install", "--upgrade", package, "--quiet"])
+    for repo in essential_git_repos:
+        print(f"*** Installing/upgrading {repo} (will be quiet)...")
+        cmd_list = ["pip", "install", "--upgrade", f"git+{repo}", "--quiet"]
+        if target:
+            cmd_list.append("--target")
+            cmd_list.append(target)
+        run_command(cmd_list)
 
 def install_requirements_recursively():
     """
@@ -51,24 +52,44 @@ def install_requirements_recursively():
     for root, dirs, files in os.walk("."):
         # Skip certain directories
         if any(skip in root for skip in [
-            ".aws-sam", ".venv", ".git", ".pytest", "lib/python", "tests/lib/python", "experiments"
+            ".aws-sam", ".venv", ".git", ".pytest", "lib/python", "tests/lib/python", 
+            "experiments", "__pycache__", "node_modules", "cdk.out", "packages", 
+            "lib/python3.11/site-packages"
         ]):
             continue
+        
+        print(f"*** Processing {root}...")
+        
+        # exclude the __init__.py files
+        files = set(files) - {"__init__.py"}
         
         if pip_requirements_file in files:
             pip_requirements_path = os.path.join(root, pip_requirements_file)
             print(f"Installing {pip_requirements_path} (will be quiet)...")
             run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
 
-            # Special handling for AWS Lambda Functions
-            if root.startswith(("lambda", "./lambda")):
+        # Special handling for AWS Lambda Functions
+        if files and root.startswith(("lambda", "./lambda")):
+            packages_dir =  os.path.join(root, "packages")
+            # remove the packages directory if it exists
+            if os.path.exists(packages_dir):
+                shutil.rmtree(packages_dir)
+            # create the packages directory
+            os.makedirs(packages_dir)
+            
+            # install the git repositories in the packages directory
+            install_essential_git_repositories(target=packages_dir)    
+                
+            if pip_requirements_file in files:
+                print(f"Installing {pip_requirements_path} (will be quiet)...")
+                # install the requirements in the packages directory
                 run_command(["pip", "install", "-r", pip_requirements_path, 
-                              "--target", os.path.join(root, "packages"), "--upgrade", "--quiet"])
+                              "--target", packages_dir, "--upgrade", "--quiet"])
 
-            # Special handling for AWS Lambda Layers
-            if root.startswith(("layers", "./layers")):
-                run_command(["pip", "install", "-r", pip_requirements_path, 
-                              "--target", os.path.join(root, "lib/python3.11/site-packages"), "--upgrade", "--quiet"])
+        # Special handling for AWS Lambda Layers
+        if root.startswith(("layers", "./layers")):
+            run_command(["pip", "install", "-r", pip_requirements_path, 
+                            "--target", os.path.join(root, "lib/python3.11/site-packages"), "--upgrade", "--quiet"])
 
 def install_other_packages():
     """
@@ -88,7 +109,7 @@ def main():
     purge_pip_cache()
     remove_pip_selfcheck()
     upgrade_pip()
-    install_essential_packages()
+    install_essential_git_repositories()
     install_requirements_recursively()
     install_other_packages()
     print("*** All done!!!")
