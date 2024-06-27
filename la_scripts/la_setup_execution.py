@@ -75,7 +75,10 @@ def main():
     # Map action to corresponding function
     if action in {"--setup_venv", "--setup", "--reset_venv", "setup_venv", "setup", "reset_venv"}:
         setup_venv(execution_dir=caller_dir, script_dir=current_dir)
-        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
+        print("Please activate the virtual environment by running:")
+        print(f"source {os.path.join(caller_dir, '.venv', 'bin', 'activate')}")
+        # it will be commented while we don't solve the issue with the venv activation
+        # install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--install_requirements", "--install", "--install_reqs", "install_requirements", "install", "install_reqs"}:
         install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--deploy", "--deploy_stack", "--deploy_cdk", "--deploy_app", "deploy", "deploy_stack", "deploy_cdk", "deploy_app"}:
