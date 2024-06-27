@@ -67,7 +67,7 @@ def install_requirements_recursively():
         if any(skip in root for skip in [
             ".aws-sam", ".venv", ".git", ".pytest", "lib/python", "tests/lib/python", 
             "experiments", "__pycache__", "node_modules", "cdk.out", "packages", 
-            "lib/python3.11/site-packages"
+            "lib/python3.11/site-packages", "venv",
         ]):
             continue
         

@@ -75,9 +75,11 @@ def main():
     # Map action to corresponding function
     if action in {"--setup_venv", "--setup", "--reset_venv", "setup_venv", "setup", "reset_venv"}:
         setup_venv(execution_dir=caller_dir, script_dir=current_dir)
+        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--install_requirements", "--install", "--install_reqs", "install_requirements", "install", "install_reqs"}:
         install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--deploy", "--deploy_stack", "--deploy_cdk", "--deploy_app", "deploy", "deploy_stack", "deploy_cdk", "deploy_app"}:
+        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
         deploy(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--help", "-h", "help"}:
         print("Automate the setup of the Python virtual environment, installation of Python requirements, and the application's deploy.")

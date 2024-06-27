@@ -1,11 +1,10 @@
-.venv
+venv
 packages
 
 *.swp
 package-lock.json
 __pycache__
 .pytest_cache
-la-mindmap/.venv
 *.egg-info
 
 # CDK asset staging directory

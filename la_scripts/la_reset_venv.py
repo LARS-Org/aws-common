@@ -3,6 +3,8 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+
 
 def _run_command(command, cwd=None, shell=False):
     """
@@ -16,35 +18,39 @@ def _run_command(command, cwd=None, shell=False):
     if result.returncode != 0:
         sys.exit(result.returncode)   
 
-def main():
-    PYTHON_VENV_DIR = "venv/"
+def reset_venv():
+    PYTHON_VENV_DIR = ".venv"
 
     print(f"*** Deleting all content under {PYTHON_VENV_DIR}...")
     shutil.rmtree(PYTHON_VENV_DIR, ignore_errors=True)
 
     print("*** Recreating Python virtual environment...")
-    _run_command(["python3.11", "-m", "venv", ".venv"])
+    _run_command(["python3.11", "-m", "venv", PYTHON_VENV_DIR])
 
     print("*** Activating Python virtual environment...")
     activate_script = os.path.join(PYTHON_VENV_DIR, "bin", "activate")
-    print(f"*** Activate script: {activate_script}")
 
-    # Use bash explicitly to source the activation script
-    bash_command = f"bash -c 'source {activate_script}'"
-    _run_command(bash_command, shell=True)
 
-    print("*** Installing Python requirements...")
-    # os.chmod("install-python-requirements.sh", 0o755)
-    # run_command(["./install-python-requirements.sh"])
-    # getting the current file directory
-    current_file_dir = os.path.dirname(os.path.abspath(__file__))
-    # append the file name to the current file directory
-    install_python_requirements_script = os.path.join(current_file_dir, "la_install_reqs.py")
-    # calling la_install_reqs.py
-    _run_command(f"python3.11 {install_python_requirements_script}", shell=True)
+    # Create a temporary shell script to activate the virtual environment
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.sh') as temp_script:
+        temp_script.write(f"#!/bin/bash\n")
+        temp_script.write(f"source {activate_script}\n")
+        temp_script.write(f"exec $SHELL\n")
+        temp_script_path = temp_script.name
+
+    # Make the script executable
+    os.chmod(temp_script_path, 0o775)
+
+    # Execute the temporary shell script
+    subprocess.run(f"bash {temp_script_path}", shell=True)
+
+    # remove the temporary shell script
+    os.remove(temp_script_path)
     
-    print("*** All done!!!")
+    # warn the user to activate the virtual environment
+    print("*** Virtual environment recreated! Please activate it by running:")
+    print(f"source {activate_script}")
 
 
 if __name__ == "__main__":
-    main()
+    reset_venv()
