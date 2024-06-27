@@ -84,6 +84,8 @@ def main():
     elif action in {"--deploy", "--deploy_stack", "--deploy_cdk", "--deploy_app", "deploy", "deploy_stack", "deploy_cdk", "deploy_app"}:
         install_requirements(execution_dir=caller_dir, script_dir=current_dir)
         deploy(execution_dir=caller_dir, script_dir=current_dir)
+    elif action in {"fast_deploy", "--fast_deploy"}:
+        deploy(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--help", "-h", "help"}:
         print("Automate the setup of the Python virtual environment, installation of Python requirements, and the application's deploy.")
         print("Usage: python3.11 la_setup.py --<setup_venv|install_requirements|deploy>")
