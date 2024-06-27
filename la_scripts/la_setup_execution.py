@@ -71,7 +71,6 @@ def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     # Get the caller script directory
     caller_dir = sys.argv[-1]
-    print(caller_dir)
 
     # Map action to corresponding function
     if action in {"--setup_venv", "--setup", "--reset_venv"}:

@@ -43,9 +43,8 @@ def main():
         print(f"Cloned the la-common repository to {script_dir}")
     # script directory exists, update it
     # call the git pull command to ensure the latest version
-    _run_command("git fetch", cwd=script_dir, shell=True)
-    _run_command("git pull", cwd=script_dir, shell=True)
-    print(f"Updated the la-common repository at {script_dir}")
+    _run_command("git fetch --quiet", cwd=script_dir, shell=True)
+    _run_command("git pull --quiet", cwd=script_dir, shell=True)
 
     # calling the execute script passing the sys.argv
     script_path = os.path.join(script_dir, "la_scripts")
