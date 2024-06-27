@@ -118,7 +118,7 @@ def install_other_packages():
         print(f"*** Installing/upgrading {package} (will be quiet)...")
         _run_command(["pip", "install", "--upgrade", package, "--quiet"])
 
-def do_install_req():
+def main():
     purge_pip_cache()
     remove_pip_selfcheck()
     upgrade_pip()
@@ -126,3 +126,6 @@ def do_install_req():
     install_requirements_recursively()
     install_other_packages()
     print("*** All done!!!")
+
+if __name__ == "__main__":
+    main()

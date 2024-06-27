@@ -6,7 +6,7 @@ installation of Python requirements, and the application's deploy.
 import os
 import subprocess
 import sys
-from la_install_reqs import do_install_req
+
 
 def _run_command(command, cwd=None, shell=False):
     """
@@ -31,6 +31,18 @@ def setup_venv(execution_dir: str, script_dir: str):
     print("*** Calling la_reset_venv.py script...")
     _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
     print("*** Virtual environment recreated!")
+
+
+def install_requirements(execution_dir: str, script_dir: str):
+    """
+    Install Python requirements by running the `la_install_reqs.py` script.
+    :param execution_dir: The directory to execute the script in.
+    :param script_dir: The directory containing the `la_install_reqs.py` script.
+    """
+    script_path = os.path.join(script_dir, "la_install_reqs.py")
+    print("*** Calling la_install_reqs.py script...")
+    _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
+    print("*** Python requirements installed!")
 
 
 def deploy(execution_dir: str, script_dir: str):
@@ -64,7 +76,7 @@ def main():
     if action in {"--setup_venv", "--setup", "--reset_venv"}:
         setup_venv(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--install_requirements", "--install", "--install_reqs"}:
-        do_install_req()
+        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--deploy", "--deploy_stack", "--deploy_cdk", "--deploy_app"}:
         deploy(execution_dir=caller_dir, script_dir=current_dir)
     elif action in {"--help", "-h"}:
