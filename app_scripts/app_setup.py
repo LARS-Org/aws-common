@@ -47,8 +47,8 @@ def main():
     _run_command("git pull --quiet", cwd=script_dir, shell=True)
 
     # calling the execute script passing the sys.argv
-    script_path = os.path.join(script_dir, "aws_scripts")
-    script_path = os.path.join(script_path, "aws_setup_execution.py")
+    script_path = os.path.join(script_dir, "app_scripts")
+    script_path = os.path.join(script_path, "app_setup_execution.py")
     # convert the sys.argv to a string
     sys_argv = " ".join(sys.argv[1:])  # remove the first argument.
     # add the current_dir as an argument
