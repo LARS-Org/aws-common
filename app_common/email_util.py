@@ -5,10 +5,10 @@ Email utility functions
 import os
 
 import resend
-from aws_common.app_config import LADefaultEmailRecipients
+from aws_common.app_config import AppDefaultEmailRecipients
 
 
-def send_email(subject, msg_html, to=LADefaultEmailRecipients):
+def send_email(subject, msg_html, to=AppDefaultEmailRecipients):
     """
     Send an email using Resend API
     """

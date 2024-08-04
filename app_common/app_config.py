@@ -5,12 +5,12 @@ Configuration parameters for the whole application.
 import os
 
 try:
-    email_recipients_parameter = os.environ["LADefaultEmailRecipients"]
-    LADefaultEmailRecipients = [
+    email_recipients_parameter = os.environ["AppDefaultEmailRecipients"]
+    AppDefaultEmailRecipients = [
         x.strip() for x in email_recipients_parameter.split(",")
     ]
 except KeyError:
-    LADefaultEmailRecipients = []
+    AppDefaultEmailRecipients = []
 
 # maximum number of contents to be generated in advance
 MAX_CONTENT_BALANCE = 3
