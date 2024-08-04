@@ -35,12 +35,12 @@ def setup_venv(execution_dir: str, script_dir: str):
 
 def install_requirements(execution_dir: str, script_dir: str):
     """
-    Install Python requirements by running the `la_install_reqs.py` script.
+    Install Python requirements by running the `app_install_reqs.py` script.
     :param execution_dir: The directory to execute the script in.
-    :param script_dir: The directory containing the `la_install_reqs.py` script.
+    :param script_dir: The directory containing the `app_install_reqs.py` script.
     """
-    script_path = os.path.join(script_dir, "la_install_reqs.py")
-    print("*** Calling la_install_reqs.py script...")
+    script_path = os.path.join(script_dir, "app_install_reqs.py")
+    print("*** Calling app_install_reqs.py script...")
     _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
     print("*** Python requirements installed!")
 
@@ -49,7 +49,7 @@ def deploy(execution_dir: str, script_dir: str):
     """
     Placeholder for the deploy functionality.
     :param execution_dir: The directory to execute the script in.
-    :param script_dir: The directory containing the `la_install_reqs.py` script.
+    :param script_dir: The directory containing the `app_install_reqs.py` script.
     """
     script_path = os.path.join(script_dir, "la_deploy.py")
     print("*** Calling la_deploy.py script...")
