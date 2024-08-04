@@ -271,17 +271,6 @@ class BaseLambdaHandler(ABC):
 
         return  # do nothing while this feature is not implemented
 
-    def send_message_to_content_queue(self, message_body) -> None:
-        """
-        Sends a message to the content generator queue configured to receive
-        events originating from lambda function invocations serviced by this
-        handler. The content generator queue is provided by AWS SQS.
-        """
-
-        queue_url = os.environ["LAContentManagerQueueUrl"]
-        # using the base lambda handler to send the message to the queue
-        self.send_message_to_sqs(queue_url, message_body)
-
     @staticmethod
     def send_message_to_user(la_user_id: int, message: str):
         """
@@ -426,16 +415,6 @@ class BaseLambdaHandler(ABC):
             return json.loads(response["Payload"].read())
         else:
             return response
-
-    @staticmethod
-    def get_content_bucket_name():
-        """
-        Returns the name of the AWS S3 bucket used to store and retrieve
-        content for this lambda handler. The name is read from the
-        ``LAContentBucketName`` environment variable.
-        """
-
-        return os.environ["LAContentBucketName"]
 
     @staticmethod
     def return_all_ok(job_return=None):
