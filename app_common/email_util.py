@@ -5,7 +5,7 @@ Email utility functions
 import os
 
 import resend
-from la_common.la_config import LADefaultEmailRecipients
+from aws_common.app_config import LADefaultEmailRecipients
 
 
 def send_email(subject, msg_html, to=LADefaultEmailRecipients):

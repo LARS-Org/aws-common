@@ -13,10 +13,10 @@ setup(
     version='0.1',
     packages=find_packages(),
     install_requires=parse_requirements('requirements.txt'),  # Include dependencies
-    author='Anderson Gomes',
-    author_email='andersonmg@gmail.com',
-    description='A shared package for common modules and constants',
-    url='https://github.com/LearnAnything-Organization/la-common',
+    author='LARS AI',
+    author_email='lars@lars.com',
+    description='A shared package for common modules and constants for AWS Lambda applications',
+    url='https://github.com/LARS-Org/aws-common.git',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',

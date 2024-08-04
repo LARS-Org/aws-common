@@ -23,12 +23,12 @@ def _run_command(command, cwd=None, shell=False):
 
 def setup_venv(execution_dir: str, script_dir: str):
     """
-    Recreate the Python virtual environment by calling the `la_reset_venv.py` script.
+    Recreate the Python virtual environment by calling the `app_reset_venv.py` script.
     :param execution_dir: The directory to execute the script in.
-    :param script_dir: The directory containing the `la_reset_venv.py` script.
+    :param script_dir: The directory containing the `app_reset_venv.py` script.
     """
-    script_path = os.path.join(script_dir, "la_reset_venv.py")
-    print("*** Calling la_reset_venv.py script...")
+    script_path = os.path.join(script_dir, "app_reset_venv.py")
+    print("*** Calling app_reset_venv.py script...")
     _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
     print("*** Virtual environment recreated!")
 
