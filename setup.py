@@ -13,7 +13,7 @@ setup(
     version='0.1',
     packages=find_packages(),
     install_requires=parse_requirements('requirements.txt'),  # Include dependencies
-    author='Nosredxxx',
+    author='LARS AI',
     author_email='lars@lars.com',
     description='A shared package for common modules and constants for AWS Lambda applications',
     url='https://github.com/LARS-Org/aws-common.git',
