@@ -42,10 +42,10 @@ def upgrade_pip():
 def install_essential_git_repositories(target=None):
     """
     Installs/upgrades essential modules dependencies directly from GitHub.
-    # pip install git+https://github.com/LearnAnything-Organization/la-common    
+    # pip install git+https://github.com/LARS-Org/aws-common    
     """
     essential_git_repos = [
-        "https://github.com/LearnAnything-Organization/la-common",
+        "https://github.com/LARS-Org/aws-common",
     ]
     
     for repo in essential_git_repos:

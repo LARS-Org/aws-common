@@ -9,7 +9,7 @@ import traceback
 from abc import ABC, abstractmethod
 
 import boto3
-from la_common.la_utils import log_object
+from aws_common.la_utils import log_object
 
 
 class BaseLambdaHandler(ABC):
