@@ -54,7 +54,7 @@ def deploy(execution_dir: str, script_dir: str):
     script_path = os.path.join(script_dir, "app_deploy.py")
     print("*** Calling app_deploy.py script...")
     _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
-    print("*** LA Deploy is done!")
+    print("*** App Deploy is done!")
 
 
 def main():
