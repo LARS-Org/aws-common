@@ -60,7 +60,7 @@ def install_requirements_recursively():
     """
     Recursively traverse the project directory and install all requirements.txt files.
     """
-    pip_requirements_file = "requirements.txt"
+    pip_requirements_file_list = ["requirements.txt", "requirements-dev.txt"]
     
     for root, dirs, files in os.walk("."):
         # Skip certain directories
@@ -76,10 +76,11 @@ def install_requirements_recursively():
         # exclude the __init__.py files
         files = set(files) - {"__init__.py"}
         
-        if pip_requirements_file in files:
-            pip_requirements_path = os.path.join(root, pip_requirements_file)
-            print(f"Installing {pip_requirements_path} (will be quiet)...")
-            _run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
+        for pip_requirements_file in pip_requirements_file_list:
+            if pip_requirements_file in files:
+                pip_requirements_path = os.path.join(root, pip_requirements_file)
+                print(f"Installing {pip_requirements_path} (will be quiet)...")
+                _run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
 
         # Special handling for AWS Lambda Functions
         if files and root.startswith(("lambda", "./lambda")):
