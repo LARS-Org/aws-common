@@ -90,7 +90,7 @@ def _install_requirements_recursively(do_log_func, run_cmd_func):
                 run_cmd_func(["pip", "install", "-r", pip_requirements_path, "--quiet"])
 
         # Special handling for AWS Lambda Functions
-        if files and root.startswith(("lambda", "./lambda")):
+        if files and root.startswith(("lambda", "./lambda", "tests", "./tests")):
             packages_dir = os.path.join(root, "packages")
             # remove the packages directory if it exists
             if os.path.exists(packages_dir):
