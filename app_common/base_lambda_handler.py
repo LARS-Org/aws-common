@@ -9,7 +9,7 @@ import traceback
 from abc import ABC, abstractmethod
 
 import boto3
-from app_common.app_utils import log_object
+from app_common.app_utils import do_log
 
 
 class BaseLambdaHandler(ABC):
@@ -175,9 +175,9 @@ class BaseLambdaHandler(ABC):
         Logs basic information about the lambda invocation, such as the
         `event`, `context` and `body` parameters received from AWS.
         """
-        log_object(self.event, title="*** Event")
-        log_object(self.context, title="*** Context")
-        log_object(self.body, title="*** Body")
+        do_log(self.event, title="*** Event")
+        do_log(self.context, title="*** Context")
+        do_log(self.body, title="*** Body")
 
     def __call__(self, event, context, must_return_all_ok_response: bool = True):
         """
