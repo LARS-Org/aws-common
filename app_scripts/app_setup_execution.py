@@ -100,7 +100,10 @@ def main():
         do_install_req(_do_log, _run_command)
     elif action in MENU_DEPLOY_OPTIONS:
         do_install_req(_do_log, _run_command)
-        do_deploy(_do_log, _run_command)
+        if do_run_tests(_do_log, _run_command):
+            do_deploy(_do_log, _run_command)
+        else:
+            _do_log("Tests failed. Skipping deployment.")
     elif action in MENU_FAST_DEPLOY_OPTIONS:
         do_deploy(_do_log, _run_command)
     elif action in MENU_TEST_OPTIONS:
