@@ -1,23 +1,15 @@
-import subprocess
-import sys
+"""
+Deployment script for the application.
+"""
 
 
-def _run_command(command, cwd=None, shell=False):
+def do_deploy(do_log_func, run_cmd_func):
     """
-    Run a shell command in the specified directory.
-
-    :param command: The command to run.
-    :param cwd: The directory to run the command in.
-    :param shell: Whether to use a shell to run the command.
+    Deploy the application.
     """
-    result = subprocess.run(command, shell=shell, cwd=cwd)
-    if result.returncode != 0:
-        sys.exit(result.returncode)  
-
-
-print("deploying...")
-# ensure the CDK is installed and deploy the stack
-_run_command("npm install -g aws-cdk", shell=True)
-_run_command("cdk bootstrap", shell=True)
-_run_command("cdk deploy", shell=True)
-print("deployed!")
+    do_log_func("deploying...")
+    # ensure the CDK is installed and deploy the stack
+    run_cmd_func("npm install -g aws-cdk", shell=True)
+    run_cmd_func("cdk bootstrap", shell=True)
+    run_cmd_func("cdk deploy", shell=True)
+    do_log_func("deployed!")

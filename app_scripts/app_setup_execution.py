@@ -8,6 +8,7 @@ import importlib.util
 from app_test import do_run_tests
 from app_reset_venv import do_reset_venv
 from app_install_reqs import do_install_req
+from app_deploy import do_deploy
 
 # Set of possible menu options considering the synonyms
 MENU_VENV_OPTIONS = {
@@ -79,17 +80,6 @@ def _run_command(command, cwd=None, shell=False):
     """
     _UTILS_MODULE.run_command(command, cwd=cwd, shell=shell)
 
-def deploy(execution_dir: str, script_dir: str):
-    """
-    Placeholder for the deploy functionality.
-    :param execution_dir: The directory to execute the script in.
-    :param script_dir: The directory containing the `app_install_reqs.py` script.
-    """
-    script_path = os.path.join(script_dir, "app_deploy.py")
-    _do_log("*** Calling app_deploy.py script...")
-    _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
-    _do_log("*** App Deploy is done!")
-    
 def main():
     """
     Main function to parse command-line arguments and call the appropriate function.
@@ -100,10 +90,6 @@ def main():
         sys.exit(1)
 
     action = sys.argv[1]
-    # Get the current script directory
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Get the caller script directory
-    caller_dir = sys.argv[-1]
 
     # Map action to corresponding function
     if action in MENU_VENV_OPTIONS:
@@ -114,9 +100,9 @@ def main():
         do_install_req(_do_log, _run_command)
     elif action in MENU_DEPLOY_OPTIONS:
         do_install_req(_do_log, _run_command)
-        deploy(execution_dir=caller_dir, script_dir=current_dir)
+        do_deploy(_do_log, _run_command)
     elif action in MENU_FAST_DEPLOY_OPTIONS:
-        deploy(execution_dir=caller_dir, script_dir=current_dir)
+        do_deploy(_do_log, _run_command)
     elif action in MENU_TEST_OPTIONS:
         do_run_tests(_do_log, _run_command)
     elif action in MENU_HELP_OPTIONS:
