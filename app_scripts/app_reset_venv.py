@@ -5,7 +5,7 @@ import shutil
 # The directory where the Python virtual environment is stored
 PYTHON_VENV_DIR = ".venv"
 
-def reset_venv(do_log_func, run_cmd_func):
+def do_reset_venv(do_log_func, run_cmd_func):
     """
     Recreate the Python virtual environment.
     """

@@ -1,132 +1,159 @@
+"""
+This module is used to install all the project requirements.
+"""
+
 import os
 import shutil
-import subprocess
-import sys
 
 
-def _run_command(command, cwd=None, shell=False):
-    """
-    Run a shell command in the specified directory.
-
-    :param command: The command to run.
-    :param cwd: The directory to run the command in.
-    :param shell: Whether to use a shell to run the command.
-    """
-    result = subprocess.run(command, shell=shell, cwd=cwd)
-    if result.returncode != 0:
-        sys.exit(result.returncode)   
-
-def purge_pip_cache():
+def _purge_pip_cache(do_log_func, run_cmd_func):
     """
     Purge the pip cache to avoid potential installation issues.
     """
-    _run_command(["python3.11", "-m", "pip", "cache", "purge"])
-    print("*** Purged pip cache.")
+    run_cmd_func(["python3.11", "-m", "pip", "cache", "purge"])
+    do_log_func("*** Purged pip cache.")
 
-def remove_pip_selfcheck():
+
+def _remove_pip_selfcheck(do_log_func):
     """
     Remove the pip selfcheck directory.
     """
     selfcheck_dir = os.path.expanduser("~/.cache/pip/selfcheck/")
     if os.path.exists(selfcheck_dir):
         shutil.rmtree(selfcheck_dir)
-    print("*** Removed pip cache selfcheck directory.")
+    do_log_func("*** Removed pip cache selfcheck directory.")
 
-def upgrade_pip():
+
+def _upgrade_pip(do_log_func, run_cmd_func):
     """
     Upgrade pip to the latest version.
     """
-    _run_command(["pip", "install", "--upgrade", "pip", "--quiet"])
-    print("*** Upgraded pip.")
+    run_cmd_func(["pip", "install", "--upgrade", "pip", "--quiet"])
+    do_log_func("*** Upgraded pip.")
 
-def install_essential_git_repositories(target=None):
+
+def _install_essential_git_repositories(do_log_func, run_cmd_func, target=None):
     """
     Installs/upgrades essential modules dependencies directly from GitHub.
-    # pip install git+https://github.com/LARS-Org/aws-common    
+    # pip install git+https://github.com/LARS-Org/aws-common
     """
     essential_git_repos = [
         "https://github.com/LARS-Org/aws-common",
     ]
-    
+
     for repo in essential_git_repos:
-        print(f"*** Installing/upgrading {repo} (will be quiet)...")
+        do_log_func(f"*** Installing/upgrading {repo} (will be quiet)...")
         cmd_list = ["pip", "install", "--upgrade", f"git+{repo}", "--quiet"]
         if target:
             cmd_list.append("--target")
             cmd_list.append(target)
-        _run_command(cmd_list)
+        run_cmd_func(cmd_list)
 
-def install_requirements_recursively():
+
+def _install_requirements_recursively(do_log_func, run_cmd_func):
     """
     Recursively traverse the project directory and install all requirements.txt files.
     """
     pip_requirements_file_list = ["requirements.txt", "requirements-dev.txt"]
-    
+
     for root, dirs, files in os.walk("."):
         # Skip certain directories
-        if any(skip in root for skip in [
-            ".aws-sam", ".venv", ".git", ".pytest", "lib/python", "tests/lib/python", 
-            "experiments", "__pycache__", "node_modules", "cdk.out", "packages", 
-            "lib/python3.11/site-packages", "venv",
-        ]):
+        if any(
+            skip in root
+            for skip in [
+                ".aws-sam",
+                ".venv",
+                ".git",
+                ".pytest",
+                "lib/python",
+                "tests/lib/python",
+                "experiments",
+                "__pycache__",
+                "node_modules",
+                "cdk.out",
+                "packages",
+                "lib/python3.11/site-packages",
+                "venv",
+            ]
+        ):
             continue
-        
-        print(f"*** Processing {root}...")
-        
+
+        do_log_func(f"*** Processing {root}...")
+
         # exclude the __init__.py files
         files = set(files) - {"__init__.py"}
-        
+
         for pip_requirements_file in pip_requirements_file_list:
             if pip_requirements_file in files:
                 pip_requirements_path = os.path.join(root, pip_requirements_file)
-                print(f"Installing {pip_requirements_path} (will be quiet)...")
-                _run_command(["pip", "install", "-r", pip_requirements_path, "--quiet"])
+                do_log_func(f"Installing {pip_requirements_path} (will be quiet)...")
+                run_cmd_func(["pip", "install", "-r", pip_requirements_path, "--quiet"])
 
         # Special handling for AWS Lambda Functions
         if files and root.startswith(("lambda", "./lambda")):
-            packages_dir =  os.path.join(root, "packages")
+            packages_dir = os.path.join(root, "packages")
             # remove the packages directory if it exists
             if os.path.exists(packages_dir):
                 shutil.rmtree(packages_dir)
             # create the packages directory
             os.makedirs(packages_dir)
-            
+
             # install the git repositories in the packages directory
-            install_essential_git_repositories(target=packages_dir)    
-                
+            _install_essential_git_repositories(
+                do_log_func, run_cmd_func, target=packages_dir
+            )
+
             if pip_requirements_file in files:
-                print(f"Installing {pip_requirements_path} (will be quiet)...")
+                do_log_func(f"Installing {pip_requirements_path} (will be quiet)...")
                 # install the requirements in the packages directory
-                _run_command(["pip", "install", "-r", pip_requirements_path, 
-                              "--target", packages_dir, "--upgrade", "--quiet"])
+                run_cmd_func(
+                    [
+                        "pip",
+                        "install",
+                        "-r",
+                        pip_requirements_path,
+                        "--target",
+                        packages_dir,
+                        "--upgrade",
+                        "--quiet",
+                    ]
+                )
 
         # Special handling for AWS Lambda Layers
         if root.startswith(("layers", "./layers")):
-            _run_command(["pip", "install", "-r", pip_requirements_path, 
-                            "--target", os.path.join(root, "lib/python3.11/site-packages"), "--upgrade", "--quiet"])
+            run_cmd_func(
+                [
+                    "pip",
+                    "install",
+                    "-r",
+                    pip_requirements_path,
+                    "--target",
+                    os.path.join(root, "lib/python3.11/site-packages"),
+                    "--upgrade",
+                    "--quiet",
+                ]
+            )
 
-def install_other_packages():
+
+def _install_other_packages(do_log_func, run_cmd_func):
     """
     Install other pip packages required by the project.
     """
-    other_packages = [
-        "pylint",
-        "black",
-        "isort"
-    ]
-    
+    other_packages = ["pylint", "black", "isort"]
+
     for package in other_packages:
-        print(f"*** Installing/upgrading {package} (will be quiet)...")
-        _run_command(["pip", "install", "--upgrade", package, "--quiet"])
+        do_log_func(f"*** Installing/upgrading {package} (will be quiet)...")
+        run_cmd_func(["pip", "install", "--upgrade", package, "--quiet"])
 
-def main():
-    purge_pip_cache()
-    remove_pip_selfcheck()
-    upgrade_pip()
-    install_essential_git_repositories()
-    install_requirements_recursively()
-    install_other_packages()
-    print("*** All done!!!")
 
-if __name__ == "__main__":
-    main()
+def do_install_req(do_log_func, run_cmd_func):
+    """
+    Main function to install all project requirements.
+    """
+    _purge_pip_cache(do_log_func, run_cmd_func)
+    _remove_pip_selfcheck(do_log_func)
+    _upgrade_pip(do_log_func, run_cmd_func)
+    _install_essential_git_repositories(do_log_func, run_cmd_func)
+    _install_requirements_recursively(do_log_func, run_cmd_func)
+    _install_other_packages(do_log_func, run_cmd_func)
+    do_log_func("*** All done!!!")

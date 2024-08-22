@@ -2,7 +2,7 @@
 This script is used to run all the tests for the project.
 """
 
-def run_tests(do_log_func, run_cmd_func):
+def do_run_tests(do_log_func, run_cmd_func):
     """
     Run all the tests for the project.
     """

@@ -5,8 +5,9 @@ installation of Python requirements, and the application's deploy.
 import os
 import sys
 import importlib.util
-from app_test import run_tests
-from app_reset_venv import reset_venv
+from app_test import do_run_tests
+from app_reset_venv import do_reset_venv
+from app_install_reqs import do_install_req
 
 # Set of possible menu options considering the synonyms
 MENU_VENV_OPTIONS = {
@@ -78,18 +79,6 @@ def _run_command(command, cwd=None, shell=False):
     """
     _UTILS_MODULE.run_command(command, cwd=cwd, shell=shell)
 
-def install_requirements(execution_dir: str, script_dir: str):
-    """
-    Install Python requirements by running the `app_install_reqs.py` script.
-    :param execution_dir: The directory to execute the script in.
-    :param script_dir: The directory containing the `app_install_reqs.py` script.
-    """
-    script_path = os.path.join(script_dir, "app_install_reqs.py")
-    _do_log("*** Calling app_install_reqs.py script...")
-    _run_command(f"python3.11 {script_path}", cwd=execution_dir, shell=True)
-    _do_log("*** Python requirements installed!")
-
-
 def deploy(execution_dir: str, script_dir: str):
     """
     Placeholder for the deploy functionality.
@@ -118,18 +107,18 @@ def main():
 
     # Map action to corresponding function
     if action in MENU_VENV_OPTIONS:
-        reset_venv(_do_log, _run_command)
+        do_reset_venv(_do_log, _run_command)
         # it will be commented while we don't solve the issue with the venv activation
         # install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in MENU_INSTALL_OPTIONS:
-        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
+        do_install_req(_do_log, _run_command)
     elif action in MENU_DEPLOY_OPTIONS:
-        install_requirements(execution_dir=caller_dir, script_dir=current_dir)
+        do_install_req(_do_log, _run_command)
         deploy(execution_dir=caller_dir, script_dir=current_dir)
     elif action in MENU_FAST_DEPLOY_OPTIONS:
         deploy(execution_dir=caller_dir, script_dir=current_dir)
     elif action in MENU_TEST_OPTIONS:
-        run_tests(_do_log, _run_command)
+        do_run_tests(_do_log, _run_command)
     elif action in MENU_HELP_OPTIONS:
         _do_log(
             "Automate the setup of the Python virtual environment, installation of Python requirements, and the application's deploy."
