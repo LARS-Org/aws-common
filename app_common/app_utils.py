@@ -78,7 +78,7 @@ def is_numeric(x) -> bool:
     return x_str.isnumeric()
 
 
-def log_object(obj, title=None, log_limit: int = 150):
+def do_log(obj, title=None, log_limit: int = 150):
     """
     Logs an object to the console, truncate the content if large.
     If the object is a dictionary, it logs the keys and recursively logs the values.
@@ -91,7 +91,8 @@ def log_object(obj, title=None, log_limit: int = 150):
     def generate_log_helper(obj, level: int = 0, log_limit: int = log_limit) -> str:
         type_str = f"[TYPE: {type(obj)}] "
         obj_str = str(obj)
-        obj_str = type_str + obj_str
+        if type(obj) not in {str}:
+            obj_str = type_str + obj_str
 
         # limit the object string length to avoid logging too much information
         if len(obj_str) <= log_limit:
