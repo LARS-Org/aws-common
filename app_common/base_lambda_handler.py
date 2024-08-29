@@ -42,6 +42,7 @@ class BaseLambdaHandler(ABC):
         self.event = None
         self.context = None
         self.body = None
+        self.headers = None
 
     def on_error(self, e):
         """
@@ -163,7 +164,7 @@ class BaseLambdaHandler(ABC):
 
         try:
             self.body = json.loads(raw_body)
-        except json.JSONDecodeError as e:
+        except Exception as e:
             print("** error parsing body as json", e)
             # Use raw body if not JSON
             return raw_body
@@ -200,6 +201,7 @@ class BaseLambdaHandler(ABC):
         self.event = event
         self.context = context
         self.body = self.load_body_from_event()
+        self.headers = event["headers"] if "headers" in event else {}
 
         # log basic information about the lambda invocation
         self._log_basic_info()
