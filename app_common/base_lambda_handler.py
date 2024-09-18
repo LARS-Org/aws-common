@@ -44,45 +44,46 @@ class BaseLambdaHandler(ABC):
         self.body = None
         self.headers = None
 
-    def on_error(self, e):
+    def _on_error(self, e):
         """
         Handles errors that occurred during a lambda function invocation. The
         parameter ``e`` is usually an exception instance with information on
         what caused the error.
         """
+        # TODO: #13 implement a better error handling mechanism
         # For now, just print the exception and send an email. This could be
         # extended to log to an external system.
         error_message = f"BaseLambdaHandler::OnError():: Error occurred:\n{e}"
         traceback_info = traceback.format_exc()
         print(error_message)
         print(traceback_info)
-        lambda_name = "not set"
-        if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
-            # this prevents errors when for some reason
-            # the environment variable is not set by AWS
-            lambda_name = str(os.environ["AWS_LAMBDA_FUNCTION_NAME"])
+        # lambda_name = "not set"
+        # if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
+        #     # this prevents errors when for some reason
+        #     # the environment variable is not set by AWS
+        #     lambda_name = str(os.environ["AWS_LAMBDA_FUNCTION_NAME"])
 
         # try send email to admin
-        try:
-            # self.event, self.context, self.body was setted in __init__ and __call__ methods
-            email_util.send_email(
-                "Error in Lambda - " + lambda_name,
-                "<b>Error msg:</b><br>"
-                + error_message
-                + "<br><br><b>Traceback Info:</b><br>"
-                + traceback_info
-                + "<br><br><b>Event:</b><br>"
-                + str(self.event)
-                + "<br><br><b>Context:</b><br>"
-                + str(self.context)
-                + "<br><br><b>Body:</b><br>"
-                + str(self.body),
-            )
-        except Exception as email_error:  # pylint: disable=broad-except
-            # using a generic exception here because we don't want to fail
-            print("Error sending email", email_error)
+        # try:
+        #     # self.event, self.context, self.body was setted in __init__ and __call__ methods
+        #     email_util.send_email(
+        #         "Error in Lambda - " + lambda_name,
+        #         "<b>Error msg:</b><br>"
+        #         + error_message
+        #         + "<br><br><b>Traceback Info:</b><br>"
+        #         + traceback_info
+        #         + "<br><br><b>Event:</b><br>"
+        #         + str(self.event)
+        #         + "<br><br><b>Context:</b><br>"
+        #         + str(self.context)
+        #         + "<br><br><b>Body:</b><br>"
+        #         + str(self.body),
+        #     )
+        # except Exception as email_error:  # pylint: disable=broad-except
+        #     # using a generic exception here because we don't want to fail
+        #     print("Error sending email", email_error)
 
-    def security_check(self) -> bool:
+    def _security_check(self) -> bool:
         """
         Performs a security check to verify that the current lambda function
         invocation is valid from a security standpoint. Must return ``True``
@@ -94,7 +95,7 @@ class BaseLambdaHandler(ABC):
 
         return True  # default implementation
 
-    def before_handle(self):
+    def _before_handle(self):
         """
         Performs tasks that should be run before the main lambda function
         processing in handle(). This method is invoked by ``_do_the_job()``
@@ -104,7 +105,7 @@ class BaseLambdaHandler(ABC):
 
         print("Running before_handle()...")
 
-    def after_handle(self):
+    def _after_handle(self):
         """
         Performs tasks that should be run after the main lambda function
         processing in handle(). This method is invoked by ``_do_the_job()`` in
@@ -115,7 +116,7 @@ class BaseLambdaHandler(ABC):
         print("Running after_handle()...")
 
     @abstractmethod
-    def handle(self):
+    def _handle(self):
         """
         The main method that handles the lambda function invocation. This
         method is invoked by ``_do_the_job()`` in this class. The default
@@ -123,7 +124,7 @@ class BaseLambdaHandler(ABC):
         overridden by subclasses.
         """
 
-    def load_body_from_event(self):
+    def _load_body_from_event(self):
         """
         Attempts to extract the body from the `event` parameter received from
         AWS upon invocation of the Lambda function. Special logic is necessary
@@ -180,7 +181,7 @@ class BaseLambdaHandler(ABC):
         do_log(self.context, title="*** Context")
         do_log(self.body, title="*** Body")
 
-    def __call__(self, event, context, must_return_all_ok_response: bool = True):
+    def __call__(self, event, context):
         """
         Performs all the tasks required to service a lambda function
         invocation, as follows:
@@ -200,7 +201,7 @@ class BaseLambdaHandler(ABC):
         # initialize the class attributes
         self.event = event
         self.context = context
-        self.body = self.load_body_from_event()
+        self.body = self._load_body_from_event()
         self.headers = event["headers"] if "headers" in event else {}
 
         # log basic information about the lambda invocation
@@ -212,14 +213,9 @@ class BaseLambdaHandler(ABC):
 
         print("** Finishing the lambda execution")
 
-        if must_return_all_ok_response:
-            # Returns a 200 OK response to keep the Lambda from retrying to
-            # execute the function
-            return self.return_all_ok(job_return)
-        else:
-            # Returns a custom response that does not necessarily contain an
-            # HTTP status code
-            return self.return_custom_response(job_return)
+        # Returns a 200 OK response to keep the Lambda from retrying to
+        # execute the function
+        return self.response(message=job_return)
 
     def _do_the_job(self):
         """
@@ -245,25 +241,25 @@ class BaseLambdaHandler(ABC):
 
         # this method is called by the __call__ method
         try:
-            if not self.security_check():
+            if not self._security_check():
                 # if the security check fails, do nothing
                 return
             # else: it is ok to proceed
-            self.before_handle()
+            self._before_handle()
             print("** before_handle() is done.")
             job_return = None
-            job_return = self.handle()
+            job_return = self._handle()
             print("** handle() is done.")
-            self.after_handle()
+            self._after_handle()
             print("** after_handle() is done.")
         except Exception as e:
-            self.on_error(e)
+            self._on_error(e)
             print("** on_error() is done.")
 
-        self.account_execution_costs()
+        self._account_execution_costs()
         return job_return
 
-    def account_execution_costs(self):
+    def _account_execution_costs(self):
         """
         Performs accounting of execution costs for a lambda function
         invocation. This method is invoked by ``_do_the_job()`` in this class
@@ -274,35 +270,7 @@ class BaseLambdaHandler(ABC):
         return  # do nothing while this feature is not implemented
 
     @staticmethod
-    def send_message_to_user(la_user_id: int, message: str):
-        """
-        Sends a message to the user identified by the given ID. The message is
-        sent via the OmniMessenger service, which is responsible for sending
-        messages to users across different platforms such as Telegram, SMS,
-        WhatsApp, etc.
-        """
-        queue_url = os.environ["OmniMessengerQueueUrl"]
-        msg_body = {"la_user_id": la_user_id, "msg_content": message}
-        BaseLambdaHandler.send_message_to_sqs(
-            queue_url=queue_url, message_body=json.dumps(msg_body)
-        )
-
-    def return_custom_response(self, job_return=None):
-        """
-        Returns a custom response, which does not necessarily contain an HTTP
-        status code. The default implementation simply returns the `job_return`
-        input parameter inside a dictionary, and is meant to be overridden by
-        subclasses. This method was designed with Lambda Authorizer functions
-        in mind, as they must return an AWS policy dictionary rather than an
-        HTTP status code and a `body` attribute:
-
-        https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html#api-gateway-lambda-authorizer-lambda-function-create
-        """
-
-        return {"custom_response": job_return}
-
-    @staticmethod
-    def get_temp_dir_path():
+    def _get_temp_dir_path():
         """
         Returns the path to the temporary directory used by this lambda
         handler. The returned path ends with a directory separator.
@@ -419,15 +387,12 @@ class BaseLambdaHandler(ABC):
             return response
 
     @staticmethod
-    def return_all_ok(job_return=None):
+    def response(status_code: int=200, message=None, headers=None, body=None):
         """
-        Returns a dictionary with a ``"200 OK"`` HTTP response. It is necessary
-        to always return this code because returning anything other than
-        ``"200"`` may cause AWS to try invoking the lambda function again with
-        the same parameters.
+        Returns a response object that can be returned by a Lambda handler.
         """
 
-        return {"statusCode": 200, "body": job_return}
+        return {"statusCode": status_code, "message": message, "headers": headers, "body": body}
 
     @staticmethod
     def body_or_none(event: dict):
