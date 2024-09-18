@@ -213,8 +213,10 @@ class BaseLambdaHandler(ABC):
 
         print("** Finishing the lambda execution")
 
-        # Returns a 200 OK response to keep the Lambda from retrying to
-        # execute the function
+        if isinstance(job_return, dict) and "statusCode" in job_return:
+            # If the return is a response object, return it
+            return job_return
+        # else: return a 200 OK response
         return self.response(message=job_return)
 
     def _do_the_job(self):
