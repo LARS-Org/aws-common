@@ -391,7 +391,7 @@ class BaseLambdaHandler(ABC):
         """
         Returns a response object that can be returned by a Lambda handler.
         """
-
+        # TODO: #14 Review the implementation of this method. Is it necessary message and body?
         return {"statusCode": status_code, "message": message, "headers": headers, "body": body}
 
     @staticmethod
