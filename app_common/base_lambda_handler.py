@@ -305,13 +305,15 @@ class BaseLambdaHandler(ABC):
         bucket.download_file(bucket_obj_name, local_file_path)
 
     @staticmethod
-    def send_message_to_sqs(queue_url, message_body, verbose=True):
+    def send_message_to_sqs(queue_url, message_body, message_group_id="same", verbose=True) -> dict:
         """
         Send a message to an SQS queue.
 
         Parameters:
         - queue_url (str): The URL of the SQS queue.
         - message_body (str): The message body you want to send.
+        - message_group_id (str, optional): The message group ID to use for
+            FIFO queues. Default is "same".
 
         Returns:
         - dict: Response from the `send_message` SQS API call.
@@ -322,20 +324,18 @@ class BaseLambdaHandler(ABC):
             message_body = json.dumps(message_body)
 
         if verbose:
-            print(
-                "** send_message_to_sqs: queue_url",
-                queue_url,
-                "\nmessage_body",
-                message_body,
-            )
+            do_log(f"** send_message_to_sqs: queue_url{queue_url}\nmessage_body{message_body}\nmessage_group_id{message_group_id}")
         # Initialize the SQS client
         sqs_client = boto3.client("sqs")
 
         # Send the message
-        response = sqs_client.send_message(QueueUrl=queue_url, MessageBody=message_body)
+        response = sqs_client.send_message(QueueUrl=queue_url, 
+                                           MessageBody=message_body, 
+                                           MessageGroupId=message_group_id # required for FIFO queues
+                                           )
 
         if verbose:
-            print("** send_message_to_sqs: response", response)
+            do_log(f"** send_message_to_sqs: response{response}")
 
         return response
 
