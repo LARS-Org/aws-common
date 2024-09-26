@@ -129,15 +129,26 @@ def do_log(obj, title=None, log_limit: int = 150):
         print(title)
 
     print(generate_log_helper(obj))
-    
+
+import subprocess
+import sys
+import platform
+import os 
 def run_command(command, cwd=None, shell=False):
     """
     Run a shell command in the specified directory.
-
+    
     :param command: The command to run.
     :param cwd: The directory to run the command in.
     :param shell: Whether to use a shell to run the command.
     """
+    # Check if running on Windows and replace 'python3.11' with the full path to python.exe
+    if platform.system() == "Windows" and "python3.11" in command:
+        # Use the full path of python3.11
+        python_path = r"C:\Users\lsieb\AppData\Local\Programs\Python\Python311\python.exe"
+        command = [python_path if arg == "python3.11" else arg for arg in command]
+
     result = subprocess.run(command, shell=shell, cwd=cwd)
+    
     if result.returncode != 0:
-        sys.exit(result.returncode)    
+        sys.exit(result.returncode) 

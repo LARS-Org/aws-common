@@ -340,19 +340,6 @@ class BaseLambdaHandler(ABC):
         return response
     
     @staticmethod
-    def send_message_to_sns(topic_arn, message, subject=None):
-        """
-        Send a message to an SNS topic.
-
-        Parameters:
-        - topic_arn (str): The ARN of the SNS topic.
-        - message (str): The message body you want to send.
-        - subject (str, optional): The subject of the message. Default is None.
-        """
-        sns_client = boto3.client("sns")
-        return sns_client.publish(TopicArn=topic_arn, Message=message, Subject=subject)
-
-    @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
         """
         Invoke an AWS Lambda function.
