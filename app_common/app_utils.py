@@ -145,8 +145,10 @@ def run_command(command, cwd=None, shell=False):
     # Check if running on Windows and replace 'python3.11' with the full path to python.exe
     if platform.system() == "Windows" and "python3.11" in command:
         # Use the full path of python3.11
-        python_path = r"C:\Users\lsieb\AppData\Local\Programs\Python\Python311\python.exe"
-        command = [python_path if arg == "python3.11" else arg for arg in command]
+        # TODO: Fix it getting the correct path from the user's Windows environment
+        # python_path = r"C:\Users\lsieb\AppData\Local\Programs\Python\Python311\python.exe"
+        new_alias = "python"
+        command = [new_alias if arg == "python3.11" else arg for arg in command]
 
     result = subprocess.run(command, shell=shell, cwd=cwd)
     
