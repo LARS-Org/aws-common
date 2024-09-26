@@ -146,7 +146,7 @@ def run_command(command, cwd=None, shell=False):
     if platform.system() == "Windows" and "python3.11" in command:
         # Use the full path of python3.11
         python_path = r"C:\Users\lsieb\AppData\Local\Programs\Python\Python311\python.exe"
-        command = [python_path if arg == "python3.11" else arg for arg in command]
+        command = [python_path if arg == "python3.11" else arg for arg in command.split()]
 
     result = subprocess.run(command, shell=shell, cwd=cwd)
     
