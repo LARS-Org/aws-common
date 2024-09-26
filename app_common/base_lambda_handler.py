@@ -397,6 +397,7 @@ class BaseLambdaHandler(ABC):
         Returns a response object that can be returned by a Lambda handler.
         """
         # TODO: #14 Review the implementation of this method. Is it necessary message and body?
+        # TODO: #16 Bug when calling this method with body as a dictionary. The response is not being returned correctly.
         return {
         'statusCode': status_code,
         'headers': headers,
