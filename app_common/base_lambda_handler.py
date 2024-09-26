@@ -391,7 +391,7 @@ class BaseLambdaHandler(ABC):
     @staticmethod
     def response(status_code: int=200, 
                  headers={'Content-Type': 'application/json'},
-                 message:str=None, 
+                 message:str="OK", 
                  body=None) -> dict:
         """
         Returns a response object that can be returned by a Lambda handler.
@@ -401,7 +401,7 @@ class BaseLambdaHandler(ABC):
         'statusCode': status_code,
         'headers': headers,
         'message': message,
-        'body': json.dumps(body)
+        'body': body
         }
 
     @staticmethod
