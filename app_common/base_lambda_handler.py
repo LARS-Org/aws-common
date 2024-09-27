@@ -345,7 +345,7 @@ class BaseLambdaHandler(ABC):
         return response
 
     @staticmethod
-    def publish_to_sns(topic_arn, message, subject=None):
+    def publish_to_sns(topic_arn, message, subject=None, verbose=True):
         """
         Send a message to an SNS topic.
 
@@ -365,7 +365,9 @@ class BaseLambdaHandler(ABC):
         else:
             _return = sns_client.publish(TopicArn=topic_arn, Message=message)
 
-        do_log(f"Message published to SNS topic: {topic_arn}")
+        if verbose:
+            do_log(f"Message published to SNS topic: {topic_arn}")
+            do_log(message, title="Message")
 
         return _return
     
