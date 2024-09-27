@@ -305,7 +305,9 @@ class BaseLambdaHandler(ABC):
         bucket.download_file(bucket_obj_name, local_file_path)
 
     @staticmethod
-    def send_message_to_sqs(queue_url, message_body, message_group_id="same", verbose=True) -> dict:
+    def send_message_to_sqs(
+        queue_url, message_body, message_group_id="same", verbose=True
+    ) -> dict:
         """
         Send a message to an SQS queue.
 
@@ -324,21 +326,56 @@ class BaseLambdaHandler(ABC):
             message_body = json.dumps(message_body)
 
         if verbose:
-            do_log(f"** send_message_to_sqs: queue_url{queue_url}\nmessage_body{message_body}\nmessage_group_id{message_group_id}")
+            do_log(
+                f"** send_message_to_sqs: queue_url{queue_url}\nmessage_body{message_body}\nmessage_group_id{message_group_id}"
+            )
         # Initialize the SQS client
         sqs_client = boto3.client("sqs")
 
         # Send the message
-        response = sqs_client.send_message(QueueUrl=queue_url, 
-                                           MessageBody=message_body, 
-                                           MessageGroupId=message_group_id # required for FIFO queues
-                                           )
+        response = sqs_client.send_message(
+            QueueUrl=queue_url,
+            MessageBody=message_body,
+            MessageGroupId=message_group_id,  # required for FIFO queues
+        )
 
         if verbose:
             do_log(f"** send_message_to_sqs: response{response}")
 
         return response
+
+    @staticmethod
+    def publish_to_sns(topic_arn, message, subject=None):
+        """
+        Send a message to an SNS topic.
+
+        Parameters:
+        - topic_arn (str): The ARN of the SNS topic.
+        - message (str): The message body you want to send.
+        - subject (str, optional): The subject of the message. Default is None.
+        """
+        # TODO: #4 Move this method to the BaseLambdaHandler as a common method
+        sns_client = boto3.client("sns")
+        _return = None
+
+        if subject:
+            _return = sns_client.publish(
+                TopicArn=topic_arn, Message=message, Subject=subject
+            )
+        else:
+            _return = sns_client.publish(TopicArn=topic_arn, Message=message)
+
+        do_log(f"Message published to SNS topic: {topic_arn}")
+
+        return _return
     
+    @staticmethod
+    def do_log(obj, title=None, log_limit=5000):
+        """
+        Wrapper function to call the do_log function from the app_utils module.
+        """
+        do_log(obj, title=title, log_limit=log_limit)
+
     @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
         """
@@ -389,20 +426,22 @@ class BaseLambdaHandler(ABC):
             return response
 
     @staticmethod
-    def response(status_code=200, 
-                 headers={'Content-Type': 'application/json'},
-                 message= 'OK', 
-                 body=None):
+    def response(
+        status_code=200,
+        headers={"Content-Type": "application/json"},
+        message="OK",
+        body=None,
+    ):
         """
         Returns a response object that can be returned by a Lambda handler.
         """
         # TODO: #14 Review the implementation of this method. Is it necessary message and body?
         # TODO: #16 Bug when calling this method with body as a dictionary. The response is not being returned correctly.
         return {
-        'statusCode': status_code,
-        'headers': headers,
-        'message': message,
-        'body': body
+            "statusCode": status_code,
+            "headers": headers,
+            "message": message,
+            "body": body,
         }
 
     @staticmethod
