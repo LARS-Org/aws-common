@@ -351,7 +351,7 @@ class BaseLambdaHandler(ABC):
         return response
 
     @staticmethod
-    def publish_to_sns(topic_arn, message, subject=None, verbose=True):
+    def publish_to_sns(topic_arn: str, message, subject=None, verbose=True):
         """
         Send a message to an SNS topic.
 
@@ -363,6 +363,9 @@ class BaseLambdaHandler(ABC):
         # TODO: #4 Move this method to the BaseLambdaHandler as a common method
         sns_client = boto3.client("sns")
         _return = None
+        if not isinstance(message, str):
+            # If the message is not a string, convert it to JSON
+            message = json.dumps(message)
 
         if subject:
             _return = sns_client.publish(
