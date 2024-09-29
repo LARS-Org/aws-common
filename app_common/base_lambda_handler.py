@@ -151,8 +151,14 @@ class BaseLambdaHandler(ABC):
                 # Decode the body if it is Base64-encoded
                 raw_body = base64.b64decode(self.event["body"])
         elif "Records" in self.event:
-            if len(self.event["Records"]) > 0 and "body" in self.event["Records"][0]:
-                raw_body = self.event["Records"][0]["body"]
+            if len(self.event["Records"]) > 0:
+                if "body" in self.event["Records"][0]:
+                    raw_body = self.event["Records"][0]["body"]
+                elif (
+                    "Sns" in self.event["Records"][0]
+                    and "Message" in self.event["Records"][0]["Sns"]
+                ):
+                    raw_body = self.event["Records"][0]["Sns"]["Message"]
 
         self.body = raw_body
 
@@ -370,7 +376,7 @@ class BaseLambdaHandler(ABC):
             do_log(message, title="Message")
 
         return _return
-    
+
     @staticmethod
     def do_log(obj, title=None, log_limit=5000):
         """
