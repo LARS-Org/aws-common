@@ -3,6 +3,7 @@ This module contains the base class for Lambda handlers.
 """
 
 import base64
+from decimal import Decimal
 import json
 import os
 import traceback
@@ -365,7 +366,7 @@ class BaseLambdaHandler(ABC):
         _return = None
         if not isinstance(message, str):
             # If the message is not a string, convert it to JSON
-            message = json.dumps(message)
+            message = json.dumps(message, default=lambda o: str(o) if isinstance(o, Decimal) else o)
 
         if subject:
             _return = sns_client.publish(
