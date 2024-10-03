@@ -129,17 +129,17 @@ class DynamoDBBase:
         """
         return self._get_by_keys(primary_key_name=pk_name, primary_key_value=pk_value)
 
-    def get_last_item_by_partition_key(self, partition_key):
+    def _get_last_items_by_key(self, key_name, key_value, k, scan_index_forward=False):
         """
-        Get the last item by partition_key and sort_key.
+        Get the last items by a key.
         """
         response = self._table.query(
-            KeyConditionExpression=Key("partition_key").eq(partition_key),
-            ScanIndexForward=False,
-            Limit=1,
+            KeyConditionExpression=Key(key_name).eq(key_value),
+            ScanIndexForward=scan_index_forward,
+            Limit=k,
         )
         if response["Items"]:
-            return response["Items"][0]
+            return response["Items"][0:k]
         return None
 
     def _get_batch_writer(self):
