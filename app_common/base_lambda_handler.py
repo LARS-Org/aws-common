@@ -10,7 +10,7 @@ import traceback
 from abc import ABC, abstractmethod
 
 import boto3
-from app_common.app_utils import do_log
+from app_common.app_utils import do_log, DecimalEncoder
 
 
 class BaseLambdaHandler(ABC):
@@ -330,7 +330,7 @@ class BaseLambdaHandler(ABC):
         if message_body is None:
             return None
         if not isinstance(message_body, str):
-            message_body = json.dumps(message_body)
+            message_body = json.dumps(message_body, cls=DecimalEncoder)
 
         if verbose:
             do_log(
@@ -361,12 +361,11 @@ class BaseLambdaHandler(ABC):
         - message (str): The message body you want to send.
         - subject (str, optional): The subject of the message. Default is None.
         """
-        # TODO: #4 Move this method to the BaseLambdaHandler as a common method
         sns_client = boto3.client("sns")
         _return = None
         if not isinstance(message, str):
             # If the message is not a string, convert it to JSON
-            message = json.dumps(message, default=lambda o: str(o) if isinstance(o, Decimal) else o)
+            message = json.dumps(message, cls=DecimalEncoder)
 
         if subject:
             _return = sns_client.publish(
@@ -412,7 +411,7 @@ class BaseLambdaHandler(ABC):
 
         # Ensure payload is a JSON string
         if isinstance(payload, dict):
-            payload = json.dumps(payload)
+            payload = json.dumps(payload, cls=DecimalEncoder)
 
         # Set invocation type based on async_invoke
         invocation_type = "Event" if async_invoke else "RequestResponse"
