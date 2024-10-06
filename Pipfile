@@ -8,6 +8,7 @@ resend = "==2.1.0"
 
 [dev-packages]
 pytest = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = ">=3.11"
