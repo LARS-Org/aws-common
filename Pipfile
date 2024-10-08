@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 resend = "==2.1.0"
+boto3 = "*"
 
 [dev-packages]
 pytest = "*"
