@@ -40,7 +40,7 @@ pipenv install
 
 To install required modules for development, run:
 ```bash
-pipen install --dev
+pipenv install --dev
 ```
 
 ## Unit tests
