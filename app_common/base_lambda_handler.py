@@ -45,19 +45,19 @@ class BaseLambdaHandler(ABC):
         self.body = None
         self.headers = None
 
-    def _on_error(self, e):
+    def _on_error(self, e, traceback_info=None):
         """
         Handles errors that occurred during a lambda function invocation. The
         parameter ``e`` is usually an exception instance with information on
         what caused the error.
         """
         # TODO: #13 implement a better error handling mechanism
-        # For now, just print the exception and send an email. This could be
-        # extended to log to an external system.
+        # For now, just print the exception. This could be extended
+        # to sending an email and logging to an external system.
         error_message = f"BaseLambdaHandler::OnError():: Error occurred:\n{e}"
-        traceback_info = traceback.format_exc()
         print(error_message)
-        print(traceback_info)
+        if traceback_info:
+            print(traceback_info)
         # lambda_name = "not set"
         # if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
         #     # this prevents errors when for some reason

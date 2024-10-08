@@ -1,7 +1,7 @@
 import json
 import decimal
 import pytest
-from app_common.app_utils import DecimalEncoder
+from app_common.app_utils import DecimalEncoder, get_first_non_none
 
 def test_decimal_encoder_with_decimal():
     # Test that a decimal.Decimal is converted to a string
@@ -45,4 +45,60 @@ def test_decimal_encoder_invalid_data():
         class CustomObject:
             pass
         json.dumps({"obj": CustomObject()}, cls=DecimalEncoder)
+
+def test_get_first_non_none_with_all_none_args():
+    """
+    Test when all positional arguments are None.
+    """
+    result = get_first_non_none(None, None, None)
+    assert result is None
+
+def test_get_first_non_none_with_mixed_positional_args():
+    """
+    Test when there is a mix of None and non-None positional arguments.
+    """
+    result = get_first_non_none(None, 42, None)
+    assert result == 42
+
+def test_get_first_non_none_with_all_non_none_positional_args():
+    """
+    Test when all positional arguments are non-None.
+    """
+    result = get_first_non_none(1, 2, 3)
+    assert result == 1
+
+def test_get_first_non_none_with_all_none_kwargs():
+    """
+    Test when all keyword arguments are None.
+    """
+    result = get_first_non_none(a=None, b=None)
+    assert result is None
+
+def test_get_first_non_none_with_mixed_kwargs():
+    """
+    Test when there is a mix of None and non-None keyword arguments.
+    """
+    result = get_first_non_none(a=None, b=10)
+    assert result == 10
+
+def test_get_first_non_none_with_all_non_none_kwargs():
+    """
+    Test when all keyword arguments are non-None.
+    """
+    result = get_first_non_none(a=5, b=10)
+    assert result == 5
+
+def test_get_first_non_none_with_positional_and_kwargs():
+    """
+    Test when there are both positional and keyword arguments.
+    """
+    result = get_first_non_none(None, None, a=100, b=None)
+    assert result == 100
+
+def test_get_first_non_none_positional_takes_precedence():
+    """
+    Test that positional arguments take precedence over keyword arguments.
+    """
+    result = get_first_non_none(None, 99, a=100, b=None)
+    assert result == 99
 
