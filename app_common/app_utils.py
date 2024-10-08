@@ -25,15 +25,7 @@ def get_first_non_none(*args, **kwargs):
     exists.
     """
 
-    for arg in args:
-        if arg is not None:
-            return arg
-
-    for key, val in kwargs.items(): # Unpacking the val from the keyword argument
-        if val is not None:
-            return val
-
-    return None
+    return next((arg for arg in list(args) + list(kwargs.values()) if arg is not None), None)
 
 
 def get_first_element(l: list):
