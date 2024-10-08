@@ -29,7 +29,7 @@ def get_first_non_none(*args, **kwargs):
         if arg is not None:
             return arg
 
-    for val in kwargs.items():
+    for key, val in kwargs.items(): # Unpacking the val from the keyword argument
         if val is not None:
             return val
 
