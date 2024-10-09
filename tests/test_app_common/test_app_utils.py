@@ -102,34 +102,35 @@ def test_get_first_non_none_positional_takes_precedence():
     result = get_first_non_none(None, 99, a=100, b=None)
     assert result == 99
 
-def test_get_first_element_empty_list():
-    """
-    Test that get_first_element returns None for an empty list.
-    """
-    result = get_first_element([])
-    assert result is None
+class TestGetFirstElement:
+    def test_get_first_element_empty_list(self):
+        """
+        Test that get_first_element returns None for an empty list.
+        """
+        result = get_first_element([])
+        assert result is None
 
-def test_get_first_element_single_element_list():
-    """
-    Test that get_first_element returns the only element in a list with one element.
-    """
-    result = get_first_element([42])
-    assert result == 42
+    def test_get_first_element_single_element_list(self):
+        """
+        Test that get_first_element returns the only element in a list with one element.
+        """
+        result = get_first_element([42])
+        assert result == 42
 
-def test_get_first_element_multiple_elements_list():
-    """
-    Test that get_first_element returns the first element in a list with multiple elements.
-    """
-    result = get_first_element([1, 2, 3, 4, 5])
-    assert result == 1
+    def test_get_first_element_multiple_elements_list(self):
+        """
+        Test that get_first_element returns the first element in a list with multiple elements.
+        """
+        result = get_first_element([1, 2, 3, 4, 5])
+        assert result == 1
 
-def test_get_first_element_non_list_input():
-    """
-    Test that get_first_element raises an error when the input is not a list.
-    """
-    with pytest.raises(TypeError, match="Expected list, got int"):
-        get_first_element(42)   # Passing a non-list value
-    with pytest.raises(TypeError, match="Expected list, got str"):
-        get_first_element("string") # Passing a string
-    with pytest.raises(TypeError, match="Expected list, got NoneType"):
-        get_first_element(None) # Passing None
+    def test_get_first_element_non_list_input(self):
+        """
+        Test that get_first_element raises an error when the input is not a list.
+        """
+        with pytest.raises(TypeError, match="Expected list, got int"):
+            get_first_element(42)   # Passing a non-list value
+        with pytest.raises(TypeError, match="Expected list, got str"):
+            get_first_element("string") # Passing a string
+        with pytest.raises(TypeError, match="Expected list, got NoneType"):
+            get_first_element(None) # Passing None
