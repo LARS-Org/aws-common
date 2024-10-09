@@ -1,7 +1,7 @@
 import json
 import decimal
 import pytest
-from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element, str_is_none_or_empty
+from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element, str_is_none_or_empty, is_numeric
 
 class TestDecimalEncoder:
     def test_decimal_encoder_with_decimal(self):
@@ -201,3 +201,75 @@ class TestStrIsNoneOrEmpty:
 
         result = str_is_none_or_empty(NonEmptyStr())
         assert result is False
+
+class TestIsNumeric:
+    def test_is_numeric_with_none(self):
+        """
+        Test that None returns False.
+        """
+        result = is_numeric(None)
+        assert result is False
+
+    def test_is_numeric_with_integer(self):
+        """
+        Test that an integer returns True.
+        """
+        result = is_numeric(42)
+        assert result is True
+
+    def test_is_numeric_with_float(self):
+        """
+        Test that a float returns True.
+        """
+        result = is_numeric(3.14)
+        assert result is True
+
+    def test_is_numeric_with_positive_string_integer(self):
+        """
+        Test that a positive integer string returns True.
+        """
+        result = is_numeric("42")
+        assert result is True
+
+    def test_is_numeric_with_negative_string_integer(self):
+        """
+        Test that a negative integer string returns True.
+        """
+        result = is_numeric("-42")
+        assert result is True
+
+    def test_is_numeric_with_positive_string_float(self):
+        """
+        Test that a positive float string returns True.
+        """
+        result = is_numeric("3.14")
+        assert result is True
+
+    def test_is_numeric_with_negative_string_float(self):
+        """
+        Test that a negative float string returns True.
+        """
+        result = is_numeric("-3.14")
+        assert result is True
+
+    def test_is_numeric_with_plus_sign_string(self):
+        """
+        Test that a string with a plus sign followed by digits returns True.
+        """
+        result = is_numeric("+123")
+        assert result is True
+
+    def test_is_numeric_with_non_numeric_string(self):
+        """
+        Test that a non-numeric string returns False.
+        """
+        result = is_numeric("abc")
+        assert result is False
+
+    def test_is_numeric_with_whitespace_string(self):
+        """
+        Test that a string with only whitespace returns False.
+        """
+        result = is_numeric("   ")
+        assert result is False
+
