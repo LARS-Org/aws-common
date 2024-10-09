@@ -47,9 +47,11 @@ def str_is_none_or_empty(s) -> bool:
 
     if s is None:
         return True
-
-    return s.strip() == "" if isinstance(s, str) else str(s).strip() == ""
-
+    if isinstance(s, str):
+        return s.strip() == ""
+    if str(s).strip() == "":
+        return True
+    return False
 
 def is_numeric(x) -> bool:
     """
