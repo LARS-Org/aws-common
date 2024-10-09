@@ -47,61 +47,62 @@ class TestDecimalEncoder:
                 pass
             json.dumps({"obj": CustomObject()}, cls=DecimalEncoder)
 
-def test_get_first_non_none_with_all_none_args():
-    """
-    Test when all positional arguments are None.
-    """
-    result = get_first_non_none(None, None, None)
-    assert result is None
+class TestGetFirstNonNone:
+    def test_get_first_non_none_with_all_none_args(self):
+        """
+        Test when all positional arguments are None.
+        """
+        result = get_first_non_none(None, None, None)
+        assert result is None
 
-def test_get_first_non_none_with_mixed_positional_args():
-    """
-    Test when there is a mix of None and non-None positional arguments.
-    """
-    result = get_first_non_none(None, 42, None)
-    assert result == 42
+    def test_get_first_non_none_with_mixed_positional_args(self):
+        """
+        Test when there is a mix of None and non-None positional arguments.
+        """
+        result = get_first_non_none(None, 42, None)
+        assert result == 42
 
-def test_get_first_non_none_with_all_non_none_positional_args():
-    """
-    Test when all positional arguments are non-None.
-    """
-    result = get_first_non_none(1, 2, 3)
-    assert result == 1
+    def test_get_first_non_none_with_all_non_none_positional_args(self):
+        """
+        Test when all positional arguments are non-None.
+        """
+        result = get_first_non_none(1, 2, 3)
+        assert result == 1
 
-def test_get_first_non_none_with_all_none_kwargs():
-    """
-    Test when all keyword arguments are None.
-    """
-    result = get_first_non_none(a=None, b=None)
-    assert result is None
+    def test_get_first_non_none_with_all_none_kwargs(self):
+        """
+        Test when all keyword arguments are None.
+        """
+        result = get_first_non_none(a=None, b=None)
+        assert result is None
 
-def test_get_first_non_none_with_mixed_kwargs():
-    """
-    Test when there is a mix of None and non-None keyword arguments.
-    """
-    result = get_first_non_none(a=None, b=10)
-    assert result == 10
+    def test_get_first_non_none_with_mixed_kwargs(self):
+        """
+        Test when there is a mix of None and non-None keyword arguments.
+        """
+        result = get_first_non_none(a=None, b=10)
+        assert result == 10
 
-def test_get_first_non_none_with_all_non_none_kwargs():
-    """
-    Test when all keyword arguments are non-None.
-    """
-    result = get_first_non_none(a=5, b=10)
-    assert result == 5
+    def test_get_first_non_none_with_all_non_none_kwargs(self):
+        """
+        Test when all keyword arguments are non-None.
+        """
+        result = get_first_non_none(a=5, b=10)
+        assert result == 5
 
-def test_get_first_non_none_with_positional_and_kwargs():
-    """
-    Test when there are both positional and keyword arguments.
-    """
-    result = get_first_non_none(None, None, a=100, b=None)
-    assert result == 100
+    def test_get_first_non_none_with_positional_and_kwargs(self):
+        """
+        Test when there are both positional and keyword arguments.
+        """
+        result = get_first_non_none(None, None, a=100, b=None)
+        assert result == 100
 
-def test_get_first_non_none_positional_takes_precedence():
-    """
-    Test that positional arguments take precedence over keyword arguments.
-    """
-    result = get_first_non_none(None, 99, a=100, b=None)
-    assert result == 99
+    def test_get_first_non_none_positional_takes_precedence(self):
+        """
+        Test that positional arguments take precedence over keyword arguments.
+        """
+        result = get_first_non_none(None, 99, a=100, b=None)
+        assert result == 99
 
 class TestGetFirstElement:
     def test_get_first_element_empty_list(self):
