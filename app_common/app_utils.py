@@ -33,6 +33,9 @@ def get_first_element(l: list):
     Returns the first element of a list, in case such an element exists.
     """
 
+    if not isinstance(l, list):
+        raise TypeError(f"Expected list, got {type(l).__name__}")
+
     return l[0] if l else None
 
 
