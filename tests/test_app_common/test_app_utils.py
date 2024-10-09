@@ -1,7 +1,7 @@
 import json
 import decimal
 import pytest
-from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element
+from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element, str_is_none_or_empty
 
 class TestDecimalEncoder:
     def test_decimal_encoder_with_decimal(self):
@@ -136,3 +136,68 @@ class TestGetFirstElement:
             get_first_element("string") # Passing a string
         with pytest.raises(TypeError, match="Expected list, got NoneType"):
             get_first_element(None) # Passing None
+
+class TestStrIsNoneOrEmpty:
+    def test_str_is_none(self):
+        """
+        Test when the input is None. The function should return True.
+        """
+        result = str_is_none_or_empty(None)
+        assert result is True
+
+    def test_str_is_empty_string(self):
+        """
+        Test when the input is an empty string. The function should return True.
+        """
+        result = str_is_none_or_empty("")
+        assert result is True
+
+    def test_str_is_whitespace(self):
+        """
+        Test when the input is a string containing only whitespace. The function should return True.
+        """
+        result = str_is_none_or_empty("   ")
+        assert result is True
+
+    def test_str_is_non_empty_string(self):
+        """
+        Test when the input is a non-empty string. The function should return False.
+        """
+        result = str_is_none_or_empty("Hello")
+        assert result is False
+
+    def test_str_is_number(self):
+        """
+        Test when the input is a number. The function should return False.
+        """
+        result = str_is_none_or_empty(123)
+        assert result is False
+
+    def test_str_is_empty_converted_number(self):
+        """
+        Test when the input is zero. The function should return False because '0' is not an empty string.
+        """
+        result = str_is_none_or_empty(0)
+        assert result is False
+
+    def test_str_is_object_with_empty_str_representation(self):
+        """
+        Test when the input is an object whose string representation is an empty string. The function should return True.
+        """
+        class EmptyStr:
+            def __str__(self):
+                return ""
+
+        result = str_is_none_or_empty(EmptyStr())
+        assert result is True
+
+    def test_str_is_object_with_non_empty_str_representation(self):
+        """
+        Test when the input is an object whose string representation is non-empty. The function should return False.
+        """
+        class NonEmptyStr:
+            def __str__(self):
+                return "NonEmpty"
+
+        result = str_is_none_or_empty(NonEmptyStr())
+        assert result is False
