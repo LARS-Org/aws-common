@@ -56,23 +56,18 @@ def str_is_none_or_empty(s) -> bool:
 def is_numeric(x) -> bool:
     """
     Returns `True` in case the input argument is numeric. An argument is
-    considered numeric if it is either an `int`, a `float`, or a `string`
-    that may or may not have a plus (`+`) or minus sign (`-`) followed by
-    digits between `0` and `9`.
+    considered numeric if it is either an `int`, a `float`, or a string
+    representing a number.
     """
 
     if x is None:
         return False
 
-    if isinstance(x, (int, float)):
+    try:
+        float(x)
         return True
-
-    x_str = str(x).strip()
-
-    if len(x_str) > 0 and x[0] in ("+", "-"):
-        x_str = x_str[1:]
-
-    return x_str.isnumeric()
+    except ValueError:
+        return False
 
 
 def do_log(obj, title=None, log_limit: int = 150):
