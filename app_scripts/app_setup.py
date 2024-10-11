@@ -1,5 +1,5 @@
 """
-This script is used to automate the setup of the Python virtual environment, 
+This script is used to automate the setup of the Python virtual environment,
 installation of Python requirements, and the application's deploy.
 """
 
@@ -36,7 +36,7 @@ def main():
         # call the git clone command
         parent_dir = os.path.join(current_dir, "..")
         _run_command(
-            f"git clone https://github.com/LARS-Org/aws-common.git",
+            "git clone https://github.com/LARS-Org/aws-common.git",
             cwd=parent_dir,
             shell=True,
         )
