@@ -69,58 +69,55 @@ def is_numeric(x) -> bool:
     except ValueError:
         return False
 
+import pprint
+from collections import deque
+
+import pprint
+from collections import deque
 
 def do_log(obj, title=None, log_limit: int = 150):
     """
-    Logs an object to the console, truncate the content if large.
-    If the object is a dictionary, it logs the keys and recursively logs the values.
-    If the object is a list, it logs the first 10 elements and recursively logs them.
+    Logs an object to the console, truncating the content if large.
+    If the object is a dictionary, it logs the keys and values.
+    If the object is a list, it logs the first 2 elements, indicating it's a sample.
     """
+    def _indent(level: int = 1, base_chars: str = "---") -> str:
+        # Generate indentation string based on the given level
+        return "\n" + (base_chars * level)
 
-    def _indentation_helper(level: int = 1, base_chars: str = "---") -> str:
-        return "\r" + (base_chars * level)
+    output_lines = []
+    stack = deque([(obj, 0)])
 
-    def generate_log_helper(obj, level: int = 0, log_limit: int = log_limit) -> str:
-        type_str = f"[TYPE: {type(obj)}] "
-        obj_str = str(obj)
-        if type(obj) not in {str}:
-            obj_str = type_str + obj_str
+    while stack:
+        current_obj, level = stack.pop()
+        if isinstance(current_obj, str):
+            # Handle string objects directly, applying truncation if needed
+            output_lines.append(_indent(level) + (current_obj[:log_limit] + "..." if len(current_obj) > log_limit else current_obj) + "\n")
 
-        # limit the object string length to avoid logging too much information
-        if len(obj_str) <= log_limit:
-            # object is small enough to log it entirely
-            return _indentation_helper(level=level) + obj_str
-        # else:
-        # object is too large, truncate it
-        obj_str = obj_str[:log_limit] + "..."
+        elif isinstance(current_obj, dict):
+            # Handle dictionary objects, logging each key and value
+            output_lines.append(_indent(level) + f"[TYPE: {type(current_obj)}]\n")
+            for key, value in reversed(current_obj.items()):
+                stack.append((value, level + 2))
+                output_lines.append(_indent(level + 1) + key + "\n")
 
-        if type(obj) in [dict, list]:
-            # update the string to show only the type
-            obj_str = type_str
+        elif isinstance(current_obj, list):
+            # Handle list objects, logging the first 2 elements as a sample
+            output_lines.append(_indent(level) + f"[TYPE: {type(current_obj)}] Sample:\n")
+            for item in reversed(current_obj[:2]):
+                stack.append((item, level + 1))
 
-        # indenting the object string
-        obj_str = _indentation_helper(level=level) + obj_str
-
-        # updating the indentation to show sub-elements in case of dictionaries and lists
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                obj_str += _indentation_helper(level=level) + f"{key} = "
-                obj_str += generate_log_helper(value, level + 1)
-        elif isinstance(obj, list):
-            obj_str += (
-                _indentation_helper(level=level) + f"Length: {len(obj)}. Sample: "
-            )
-            for i, item in enumerate(obj):
-                if i >= 3:
-                    break
-                obj_str += generate_log_helper(item, level + 1)
-
-        return obj_str
+        else:
+            # Default case for other object types, applying truncation if needed
+            obj_str = str(current_obj)
+            output_lines.append(_indent(level) + (obj_str[:log_limit] + "..." if len(obj_str) > log_limit else obj_str) + "\n")
 
     if title:
+        # Print the title if provided
         print(title)
 
-    print(generate_log_helper(obj))
+    # Print the generated log for the given object
+    print("".join(output_lines))
 
 import subprocess
 import sys
