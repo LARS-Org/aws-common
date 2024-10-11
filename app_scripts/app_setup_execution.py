@@ -2,13 +2,15 @@
 This script is used to automate the setup of the Python virtual environment, 
 installation of Python requirements, and the application's deploy.
 """
+
+import importlib.util
 import os
 import sys
-import importlib.util
-from app_test import do_run_tests
-from app_reset_venv import do_reset_venv
-from app_install_reqs import do_install_req
+
 from app_deploy import do_deploy
+from app_install_reqs import do_install_req
+from app_reset_venv import do_reset_venv
+from app_test import do_run_tests
 
 # Set of possible menu options considering the synonyms
 MENU_VENV_OPTIONS = {
@@ -67,6 +69,7 @@ _UTILS_MODULE = importlib.util.module_from_spec(spec)
 sys.modules["app_utils_module"] = _UTILS_MODULE
 spec.loader.exec_module(_UTILS_MODULE)
 
+
 def _do_log(obj, title=None, log_limit: int = 150):
     """
     Wrapper function to call the do_log function from the app_utils module.
@@ -80,11 +83,14 @@ def _run_command(command, cwd=None, shell=False):
     """
     _UTILS_MODULE.run_command(command, cwd=cwd, shell=shell)
 
+
 def main():
     """
     Main function to parse command-line arguments and call the appropriate function.
     """
-    error_msg_args = "Usage: la_setup.py --<setup_venv|install_requirements|deploy|run_tests>"
+    error_msg_args = (
+        "Usage: la_setup.py --<setup_venv|install_requirements|deploy|run_tests>"
+    )
     if len(sys.argv) != 4:
         _do_log(error_msg_args)
         sys.exit(1)

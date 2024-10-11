@@ -3,14 +3,15 @@ This module contains the base class for Lambda handlers.
 """
 
 import base64
-from decimal import Decimal
 import json
 import os
 import traceback
 from abc import ABC, abstractmethod
+from decimal import Decimal
 
 import boto3
-from app_common.app_utils import do_log, DecimalEncoder
+
+from app_common.app_utils import DecimalEncoder, do_log
 
 
 class BaseLambdaHandler(ABC):

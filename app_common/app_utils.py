@@ -25,7 +25,9 @@ def get_first_non_none(*args, **kwargs):
     exists.
     """
 
-    return next((arg for arg in list(args) + list(kwargs.values()) if arg is not None), None)
+    return next(
+        (arg for arg in list(args) + list(kwargs.values()) if arg is not None), None
+    )
 
 
 def get_first_element(l: list):
@@ -53,6 +55,7 @@ def str_is_none_or_empty(s) -> bool:
         return True
     return False
 
+
 def is_numeric(x) -> bool:
     """
     Returns `True` in case the input argument is numeric. An argument is
@@ -69,11 +72,10 @@ def is_numeric(x) -> bool:
     except ValueError:
         return False
 
-import pprint
-from collections import deque
 
 import pprint
 from collections import deque
+
 
 def do_log(obj, title=None, log_limit: int = 150):
     """
@@ -81,6 +83,7 @@ def do_log(obj, title=None, log_limit: int = 150):
     If the object is a dictionary, it logs the keys and values.
     If the object is a list, it logs the first 2 elements, indicating it's a sample.
     """
+
     def _indent(level: int = 1, base_chars: str = "---") -> str:
         # Generate indentation string based on the given level
         return "\n" + (base_chars * level)
@@ -92,7 +95,15 @@ def do_log(obj, title=None, log_limit: int = 150):
         current_obj, level = stack.pop()
         if isinstance(current_obj, str):
             # Handle string objects directly, applying truncation if needed
-            output_lines.append(_indent(level) + (current_obj[:log_limit] + "..." if len(current_obj) > log_limit else current_obj) + "\n")
+            output_lines.append(
+                _indent(level)
+                + (
+                    current_obj[:log_limit] + "..."
+                    if len(current_obj) > log_limit
+                    else current_obj
+                )
+                + "\n"
+            )
 
         elif isinstance(current_obj, dict):
             # Handle dictionary objects, logging each key and value
@@ -103,14 +114,20 @@ def do_log(obj, title=None, log_limit: int = 150):
 
         elif isinstance(current_obj, list):
             # Handle list objects, logging the first 2 elements as a sample
-            output_lines.append(_indent(level) + f"[TYPE: {type(current_obj)}] Sample:\n")
+            output_lines.append(
+                _indent(level) + f"[TYPE: {type(current_obj)}] Sample:\n"
+            )
             for item in reversed(current_obj[:2]):
                 stack.append((item, level + 1))
 
         else:
             # Default case for other object types, applying truncation if needed
             obj_str = str(current_obj)
-            output_lines.append(_indent(level) + (obj_str[:log_limit] + "..." if len(obj_str) > log_limit else obj_str) + "\n")
+            output_lines.append(
+                _indent(level)
+                + (obj_str[:log_limit] + "..." if len(obj_str) > log_limit else obj_str)
+                + "\n"
+            )
 
     if title:
         # Print the title if provided
@@ -119,14 +136,17 @@ def do_log(obj, title=None, log_limit: int = 150):
     # Print the generated log for the given object
     print("".join(output_lines))
 
+
+import os
+import platform
 import subprocess
 import sys
-import platform
-import os 
+
+
 def run_command(command, cwd=None, shell=False):
     """
     Run a shell command in the specified directory.
-    
+
     :param command: The command to run.
     :param cwd: The directory to run the command in.
     :param shell: Whether to use a shell to run the command.
@@ -139,7 +159,6 @@ def run_command(command, cwd=None, shell=False):
         command = command.replace("python3.11", sys.executable)
 
     result = subprocess.run(command, shell=shell, cwd=cwd)
-    
+
     if result.returncode != 0:
         sys.exit(result.returncode)
-
