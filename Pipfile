@@ -10,6 +10,9 @@ boto3 = "*"
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
+black = "*"
+flake8 = "*"
+isort = "*"
 
 [requires]
 python_version = "3.11"
