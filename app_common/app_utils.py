@@ -6,6 +6,7 @@ import decimal
 import json
 import subprocess
 import sys
+from collections import deque
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -30,15 +31,15 @@ def get_first_non_none(*args, **kwargs):
     )
 
 
-def get_first_element(l: list):
+def get_first_element(lst: list):
     """
     Returns the first element of a list, in case such an element exists.
     """
 
-    if not isinstance(l, list):
-        raise TypeError(f"Expected list, got {type(l).__name__}")
+    if not isinstance(lst, list):
+        raise TypeError(f"Expected list, got {type(lst).__name__}")
 
-    return l[0] if l else None
+    return lst[0] if lst else None
 
 
 def str_is_none_or_empty(s) -> bool:
@@ -71,10 +72,6 @@ def is_numeric(x) -> bool:
         return True
     except ValueError:
         return False
-
-
-import pprint
-from collections import deque
 
 
 def do_log(obj, title=None, log_limit: int = 150):
@@ -135,12 +132,6 @@ def do_log(obj, title=None, log_limit: int = 150):
 
     # Print the generated log for the given object
     print("".join(output_lines))
-
-
-import os
-import platform
-import subprocess
-import sys
 
 
 def run_command(command, cwd=None, shell=False):
