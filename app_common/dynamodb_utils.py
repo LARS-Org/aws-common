@@ -1,5 +1,6 @@
 """
-This module contains the DynamoDBBase class that handles common operations for DynamoDB tables.
+This module contains the DynamoDBBase class that handles common operations
+for DynamoDB tables.
 """
 
 from decimal import Decimal
@@ -21,14 +22,15 @@ class DynamoDBBase:
         Convert all float values in the given dictionary or list to Decimals
         compatible with DynamoDB.
 
-        DynamoDB requires numerical values to be expressed as Decimals instead of floats,
-        as it does not support the float data type directly. This function ensures that
-        all floating-point numbers are converted to Decimal, which is the correct numerical
-        type for DynamoDB.
+        DynamoDB requires numerical values to be expressed as Decimals instead
+        of floats, as it does not support the float data type directly. This
+        function ensures that all floating-point numbers are converted to
+        Decimal, which is the correct numerical type for DynamoDB.
 
         Args:
-            item (dict, list or object): The dictionary, list or object containing the data
-            to be converted and inserted into DynamoDB.
+            item (dict, list or object): The dictionary, list or object containing
+            the data to be converted and inserted into DynamoDB.
+
 
         Returns:
             dict: A new dictionary with all float values converted to Decimals, suitable
@@ -89,7 +91,8 @@ class DynamoDBBase:
         """
         Retrieves items by primary key and optional sort key.
 
-        - Use query instead of scan for better performance when only primary key is provided.
+        - Use query instead of scan for better performance when only primary
+          key is provided.
         - Ensure that your table's key design and indexes support your query patterns
           for efficiency.
         """
