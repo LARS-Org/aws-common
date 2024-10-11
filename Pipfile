@@ -13,6 +13,7 @@ pytest-cov = "*"
 black = "*"
 flake8 = "*"
 isort = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.11"

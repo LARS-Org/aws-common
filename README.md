@@ -1,4 +1,6 @@
+
 # aws-common
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 ## Python environment
 ### Installing Pipenv
 Python environment is maintained with Pipenv. To install Pipenv, ensure you have Python and pip installed in your environment and run:
@@ -37,12 +39,30 @@ To install required modules, run:
 ```bash
 pipenv install
 ```
-
+### Setting Up the Development Environment
 To install required modules for development, run:
 ```bash
 pipenv install --dev
 ```
-
+#### Pre-commit Hooks
+We use `pre-commit` to ensure consistent code quality. Install the pre-commit hooks by running:
+```bash
+pipenv run pre-commit install
+```
+#### Code Formatting and Quality Checks
+- To format code with **Black**:
+```bash
+pipenv run black .
+```
+- To sort imports with **isort**:
+```bash
+pipenv run isort .
+```
+- To check code quality with **Flake8**:
+```bash
+pipenv run flake8 .
+```
+These tools help maintain code quality and consistency across the project.
 ## Unit tests
 To run unit tests, after installing required modules for development, run:
 ```bash
