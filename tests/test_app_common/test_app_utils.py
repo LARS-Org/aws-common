@@ -342,6 +342,48 @@ class TestDoLog:
         do_log([])
         mock_print.assert_called_once_with("\n[TYPE: <class 'list'>] Sample:\n")
 
+    @patch('builtins.print')
+    def test_do_log_default_case_int(self, mock_print):
+        """
+        Test logging an integer (default case).
+        """
+        do_log(42, log_limit=50)
+        mock_print.assert_called_once_with("\n42\n")
+
+    @patch('builtins.print')
+    def test_do_log_default_case_float(self, mock_print):
+        """
+        Test logging a float (default case).
+        """
+        do_log(3.14159, log_limit=50)
+        mock_print.assert_called_once_with("\n3.14159\n")
+
+    @patch('builtins.print')
+    def test_do_log_default_case_object(self, mock_print):
+        """
+        Test logging an object instance (default case).
+        """
+        class SampleObject:
+            def __str__(self):
+                return "SampleObjectRepresentation"
+
+        obj = SampleObject()
+        do_log(obj, log_limit=50)
+        mock_print.assert_called_once_with("\nSampleObjectRepresentation\n")
+
+    @patch('builtins.print')
+    def test_do_log_truncated_object(self, mock_print):
+        """
+        Test logging a long object string representation that should be truncated.
+        """
+        class SampleObject:
+            def __str__(self):
+                return "A" * 200
+
+        obj = SampleObject()
+        do_log(obj, log_limit=50)
+        mock_print.assert_called_once_with("\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...\n")
+
 from unittest.mock import call
 import subprocess, sys
 from app_common.app_utils import run_command
@@ -394,3 +436,20 @@ class TestRunCommand:
         run_command(["python3.11", "--version"])
         mock_subprocess_run.assert_called_once_with([sys.executable, "--version"], shell=False, cwd=None)
 
+    @patch('subprocess.run')
+    def test_run_command_string_command(self, mock_subprocess_run):
+        """
+        Test run_command with a string command to ensure replacement of 'python3.11' with sys.executable.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command("python3.11 --version", shell=True)
+        mock_subprocess_run.assert_called_once_with(f"{sys.executable} --version", shell=True, cwd=None)
+
+    @patch('subprocess.run')
+    def test_run_command_string_command_no_replacement(self, mock_subprocess_run):
+        """
+        Test run_command with a string command that does not require replacement.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command("echo Hello World", shell=True)
+        mock_subprocess_run.assert_called_once_with("echo Hello World", shell=True, cwd=None)
