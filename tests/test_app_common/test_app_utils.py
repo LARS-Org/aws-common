@@ -341,3 +341,56 @@ class TestDoLog:
         """
         do_log([])
         mock_print.assert_called_once_with("\n[TYPE: <class 'list'>] Sample:\n")
+
+from unittest.mock import call
+import subprocess, sys
+from app_common.app_utils import run_command
+
+class TestRunCommand:
+    @patch('subprocess.run')
+    def test_run_command_success(self, mock_subprocess_run):
+        """
+        Test that run_command runs successfully.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command(["echo", "Hello World"])
+        mock_subprocess_run.assert_called_once_with(["echo", "Hello World"], shell=False, cwd=None)
+
+    @patch('subprocess.run')
+    @patch('sys.exit')
+    def test_run_command_failure(self, mock_sys_exit, mock_subprocess_run):
+        """
+        Test that run_command exits on failure.
+        """
+        mock_subprocess_run.return_value.returncode = 1
+        run_command(["invalid_command"])
+        mock_subprocess_run.assert_called_once_with(["invalid_command"], shell=False, cwd=None)
+        mock_sys_exit.assert_called_once_with(1)
+
+    @patch('subprocess.run')
+    def test_run_command_with_shell(self, mock_subprocess_run):
+        """
+        Test that run_command runs successfully with shell=True.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command(["echo Hello World"], shell=True)
+        mock_subprocess_run.assert_called_once_with(["echo Hello World"], shell=True, cwd=None)
+
+    @patch('subprocess.run')
+    def test_run_command_with_cwd(self, mock_subprocess_run):
+        """
+        Test that run_command runs successfully with a specific working directory.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command(["ls"], cwd="/home/user")
+        mock_subprocess_run.assert_called_once_with(["ls"], shell=False, cwd="/home/user")
+
+    @patch('subprocess.run')
+    def test_run_command_replace_python(self, mock_subprocess_run):
+        """
+        Test that run_command replaces 'python3.11' with the current Python executable.
+        """
+        mock_subprocess_run.return_value.returncode = 0
+        run_command(["python3.11", "--version"])
+        mock_subprocess_run.assert_called_once_with([sys.executable, "--version"], shell=False, cwd=None)
+
