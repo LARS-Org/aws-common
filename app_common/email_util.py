@@ -5,6 +5,7 @@ Email utility functions
 import os
 
 import resend
+
 from app_common.app_config import AppDefaultEmailRecipients
 
 
