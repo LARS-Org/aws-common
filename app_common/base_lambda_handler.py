@@ -5,9 +5,7 @@ This module contains the base class for Lambda handlers.
 import base64
 import json
 import os
-import traceback
 from abc import ABC, abstractmethod
-from decimal import Decimal
 
 import boto3
 
@@ -59,31 +57,6 @@ class BaseLambdaHandler(ABC):
         print(error_message)
         if traceback_info:
             print(traceback_info)
-        # lambda_name = "not set"
-        # if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
-        #     # this prevents errors when for some reason
-        #     # the environment variable is not set by AWS
-        #     lambda_name = str(os.environ["AWS_LAMBDA_FUNCTION_NAME"])
-
-        # try send email to admin
-        # try:
-        #     # self.event, self.context, self.body was setted in __init__ and __call__ methods
-        #     email_util.send_email(
-        #         "Error in Lambda - " + lambda_name,
-        #         "<b>Error msg:</b><br>"
-        #         + error_message
-        #         + "<br><br><b>Traceback Info:</b><br>"
-        #         + traceback_info
-        #         + "<br><br><b>Event:</b><br>"
-        #         + str(self.event)
-        #         + "<br><br><b>Context:</b><br>"
-        #         + str(self.context)
-        #         + "<br><br><b>Body:</b><br>"
-        #         + str(self.body),
-        #     )
-        # except Exception as email_error:  # pylint: disable=broad-except
-        #     # using a generic exception here because we don't want to fail
-        #     print("Error sending email", email_error)
 
     def _security_check(self) -> bool:
         """
@@ -335,8 +308,11 @@ class BaseLambdaHandler(ABC):
 
         if verbose:
             do_log(
-                f"** send_message_to_sqs: queue_url{queue_url}\nmessage_body{message_body}\nmessage_group_id{message_group_id}"
+                f"** send_message_to_sqs: queue_url {queue_url}\n"
+                f"message_body {message_body}\n"
+                f"message_group_id {message_group_id}"
             )
+
         # Initialize the SQS client
         sqs_client = boto3.client("sqs")
 
@@ -431,7 +407,8 @@ class BaseLambdaHandler(ABC):
             FunctionName=function_name, InvocationType=invocation_type, Payload=payload
         )
 
-        # If synchronous invocation, read and return the Lambda function response payload
+        # If synchronous invocation, read and return the Lambda function
+        # response payload
         if not async_invoke:
             return json.loads(response["Payload"].read())
         else:
@@ -447,8 +424,8 @@ class BaseLambdaHandler(ABC):
         """
         Returns a response object that can be returned by a Lambda handler.
         """
-        # TODO: #14 Review the implementation of this method. Is it necessary message and body?
-        # TODO: #16 Bug when calling this method with body as a dictionary. The response is not being returned correctly.
+        # TODO: #14 Review implementation of this method. Necessary message and body?
+        # TODO: #16 Bug when calling this method with body as a dict. Bad response.
         return {
             "statusCode": status_code,
             "headers": headers,
