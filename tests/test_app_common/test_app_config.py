@@ -1,8 +1,6 @@
 import os
 from unittest.mock import patch
 
-import pytest
-
 
 # Import the module after environment is mocked
 def reload_module():
@@ -76,7 +74,7 @@ def test_mixed_valid_and_invalid_emails():
     with patch.dict(
         "os.environ",
         {
-            "AppDefaultEmailRecipients": "valid1@example.com, invalid-email, valid2@example.com"
+            "AppDefaultEmailRecipients": "valid1@example.com, invalid-email, valid2@example.com"  # noqa:E501
         },
     ):
         config_module = reload_module()
