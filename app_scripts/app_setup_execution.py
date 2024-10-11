@@ -1,5 +1,5 @@
 """
-This script is used to automate the setup of the Python virtual environment, 
+This script is used to automate the setup of the Python virtual environment,
 installation of Python requirements, and the application's deploy.
 """
 
@@ -116,7 +116,8 @@ def main():
         do_run_tests(_do_log, _run_command)
     elif action in MENU_HELP_OPTIONS:
         _do_log(
-            "Automate the setup of the Python virtual environment, installation of Python requirements, and the application's deploy."
+            "Automate the setup of the Python virtual environment, "
+            "installation of Python requirements, and the application's deploy."
         )
         _do_log(
             "Usage: python3.11 la_setup.py --<setup_venv|install_requirements|deploy>"
