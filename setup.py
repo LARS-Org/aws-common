@@ -11,7 +11,7 @@ setup(
     install_requires=[],  # Pipenv manages dependencies
     author="LARS AI",
     author_email="lars-ai@lars-ai.com",
-    description="A shared package for common modules and constants for AWS Lambda applications",
+    description="A shared package for common modules and constants for AWS Lambda applications",  # noqa:E501
     url="https://github.com/LARS-Org/aws-common.git",
     classifiers=[
         "Programming Language :: Python :: 3",
