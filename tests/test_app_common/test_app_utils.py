@@ -1,5 +1,7 @@
 import decimal
 import json
+import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -9,6 +11,7 @@ from app_common.app_utils import (
     get_first_element,
     get_first_non_none,
     is_numeric,
+    run_command,
     str_is_none_or_empty,
 )
 
@@ -21,7 +24,8 @@ class TestDecimalEncoder:
         assert json_data == '{"value": "10.25"}'
 
     def test_decimal_encoder_with_non_decimal(self):
-        # Test that non-decimal objects are encoded normally (e.g., strings and integers)
+        # Test that non-decimal objects are encoded normally
+        # (e.g., strings and integers)
         data = {"string": "example", "int": 5, "float": 3.14}
         json_data = json.dumps(data, cls=DecimalEncoder)
         assert json_data == '{"string": "example", "int": 5, "float": 3.14}'
@@ -41,7 +45,8 @@ class TestDecimalEncoder:
         assert json_data == expected_json
 
     def test_decimal_encoder_with_nested_data(self):
-        # Test that decimal.Decimal objects inside nested data structures are encoded correctly
+        # Test that decimal.Decimal objects inside nested data structures
+        # are encoded correctly
         data = {
             "nested": {
                 "price": decimal.Decimal("199.99"),
@@ -55,7 +60,8 @@ class TestDecimalEncoder:
         assert json_data == expected_json
 
     def test_decimal_encoder_invalid_data(self):
-        # Test that the encoder raises a TypeError for objects that can't be encoded (without handling by DecimalEncoder)
+        # Test that the encoder raises a TypeError for objects that can't be
+        # encoded (without handling by DecimalEncoder)
         with pytest.raises(TypeError):
 
             class CustomObject:
@@ -139,7 +145,8 @@ class TestGetFirstElement:
 
     def test_get_first_element_multiple_elements_list(self):
         """
-        Test that get_first_element returns the first element in a list with multiple elements.
+        Test that get_first_element returns the first element in a list with
+        multiple elements.
         """
         result = get_first_element([1, 2, 3, 4, 5])
         assert result == 1
@@ -173,7 +180,8 @@ class TestStrIsNoneOrEmpty:
 
     def test_str_is_whitespace(self):
         """
-        Test when the input is a string containing only whitespace. The function should return True.
+        Test when the input is a string containing only whitespace.
+        The function should return True.
         """
         result = str_is_none_or_empty("   ")
         assert result is True
@@ -194,14 +202,16 @@ class TestStrIsNoneOrEmpty:
 
     def test_str_is_empty_converted_number(self):
         """
-        Test when the input is zero. The function should return False because '0' is not an empty string.
+        Test when the input is zero. The function should return False because
+        '0' is not an empty string.
         """
         result = str_is_none_or_empty(0)
         assert result is False
 
     def test_str_is_object_with_empty_str_representation(self):
         """
-        Test when the input is an object whose string representation is an empty string. The function should return True.
+        Test when the input is an object whose string representation is an empty string.
+        The function should return True.
         """
 
         class EmptyStr:
@@ -213,7 +223,8 @@ class TestStrIsNoneOrEmpty:
 
     def test_str_is_object_with_non_empty_str_representation(self):
         """
-        Test when the input is an object whose string representation is non-empty. The function should return False.
+        Test when the input is an object whose string representation is non-empty.
+        The function should return False.
         """
 
         class NonEmptyStr:
@@ -296,12 +307,6 @@ class TestIsNumeric:
         assert result is False
 
 
-import pprint
-from unittest.mock import patch
-
-from app_common.app_utils import do_log
-
-
 class TestDoLog:
     @patch("builtins.print")
     def test_do_log_string(self, mock_print):
@@ -342,8 +347,8 @@ class TestDoLog:
         do_log(test_dict, log_limit=50)
         calls = [call[0][0] for call in mock_print.call_args_list]
         assert (
-            "\n[TYPE: <class 'dict'>]\n\n---key2\n\n---key1\n\n------value1\n\n------[TYPE: <class 'dict'>]\n\n---------subkey1\n\n------------subvalue1\n"
-            in calls
+            "\n[TYPE: <class 'dict'>]\n\n---key2\n\n---key1\n\n------value1\n\n------[TYPE: <class 'dict'>]\n\n---------subkey1\n\n------------subvalue1\n"  # noqa:E501
+            in calls  # noqa:E131
         )
 
     @patch("builtins.print")
@@ -421,13 +426,6 @@ class TestDoLog:
         )
 
 
-import subprocess
-import sys
-from unittest.mock import call
-
-from app_common.app_utils import run_command
-
-
 class TestRunCommand:
     @patch("subprocess.run")
     def test_run_command_success(self, mock_subprocess_run):
@@ -489,7 +487,8 @@ class TestRunCommand:
     @patch("subprocess.run")
     def test_run_command_string_command(self, mock_subprocess_run):
         """
-        Test run_command with a string command to ensure replacement of 'python3.11' with sys.executable.
+        Test run_command with a string command to ensure replacement of
+        'python3.11' with sys.executable.
         """
         mock_subprocess_run.return_value.returncode = 0
         run_command("python3.11 --version", shell=True)

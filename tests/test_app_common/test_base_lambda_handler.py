@@ -1,8 +1,6 @@
 import traceback
 from unittest.mock import patch
 
-import pytest
-
 from app_common.base_lambda_handler import BaseLambdaHandler
 
 
@@ -15,7 +13,8 @@ class TestLambdaHandler(BaseLambdaHandler):
 
 def test_test_lambda_handler_initialization():
     """
-    Test that the TestLambdaHandler initializes with None for event, context, body, and headers.
+    Test that the TestLambdaHandler initializes with None for
+    event, context, body, and headers.
     """
     handler = TestLambdaHandler()
 
@@ -27,7 +26,8 @@ def test_test_lambda_handler_initialization():
 
 def test_test_lambda_handler_on_error():
     """
-    Test that the _on_error method correctly handles exceptions and prints the error and traceback.
+    Test that the _on_error method correctly handles exceptions and
+    prints the error and traceback.
     """
     handler = TestLambdaHandler()
     error_message = "Test Exception"
