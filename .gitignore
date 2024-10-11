@@ -1,4 +1,7 @@
 venv
+.venv/
+.coverage
+
 packages
 
 *.swp
@@ -10,3 +13,4 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
