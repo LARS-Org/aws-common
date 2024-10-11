@@ -1,7 +1,7 @@
 import json
 import decimal
 import pytest
-from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element, str_is_none_or_empty, is_numeric
+from app_common.app_utils import DecimalEncoder, get_first_non_none, get_first_element, str_is_none_or_empty, is_numeric, do_log
 
 class TestDecimalEncoder:
     def test_decimal_encoder_with_decimal(self):
@@ -273,3 +273,71 @@ class TestIsNumeric:
         result = is_numeric("   ")
         assert result is False
 
+import pprint
+from unittest.mock import patch
+from app_common.app_utils import do_log
+
+class TestDoLog:
+    @patch('builtins.print')
+    def test_do_log_string(self, mock_print):
+        """
+        Test logging a simple string.
+        """
+        test_str = "Hello, this is a test."
+        do_log(test_str)
+        mock_print.assert_called_once_with("\nHello, this is a test.\n")
+
+    @patch('builtins.print')
+    def test_do_log_truncated_string(self, mock_print):
+        """
+        Test logging a long string that should be truncated.
+        """
+        test_str = "a" * 200
+        do_log(test_str, log_limit=50)
+        mock_print.assert_called_once_with("\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n")
+
+    @patch('builtins.print')
+    def test_do_log_with_title(self, mock_print):
+        """
+        Test logging with a title.
+        """
+        test_str = "Test string"
+        do_log(test_str, title="Title")
+        mock_print.assert_any_call("Title")
+        mock_print.assert_any_call("\nTest string\n")
+
+    @patch('builtins.print')
+    def test_do_log_dictionary(self, mock_print):
+        """
+        Test logging a dictionary.
+        """
+        test_dict = {"key1": "value1", "key2": {"subkey1": "subvalue1"}}
+        do_log(test_dict, log_limit=50)
+        calls = [call[0][0] for call in mock_print.call_args_list]
+        assert "\n[TYPE: <class 'dict'>]\n\n---key2\n\n---key1\n\n------value1\n\n------[TYPE: <class 'dict'>]\n\n---------subkey1\n\n------------subvalue1\n" in calls
+
+    @patch('builtins.print')
+    def test_do_log_list(self, mock_print):
+        """
+        Test logging a list.
+        """
+        test_list = ["element1", "element2", "element3"]
+        do_log(test_list, log_limit=50)
+        calls = [call[0][0] for call in mock_print.call_args_list]
+        assert "\n[TYPE: <class 'list'>] Sample:\n\n---element1\n\n---element2\n" in calls
+
+    @patch('builtins.print')
+    def test_do_log_empty_dictionary(self, mock_print):
+        """
+        Test logging an empty dictionary.
+        """
+        do_log({})
+        mock_print.assert_called_once_with("\n[TYPE: <class 'dict'>]\n")
+
+    @patch('builtins.print')
+    def test_do_log_empty_list(self, mock_print):
+        """
+        Test logging an empty list.
+        """
+        do_log([])
+        mock_print.assert_called_once_with("\n[TYPE: <class 'list'>] Sample:\n")
