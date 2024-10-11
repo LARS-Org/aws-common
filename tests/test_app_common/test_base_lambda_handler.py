@@ -11,35 +11,38 @@ class TestLambdaHandler(BaseLambdaHandler):
         return "Test handle executed"
 
 
-def test_test_lambda_handler_initialization():
-    """
-    Test that the TestLambdaHandler initializes with None for
-    event, context, body, and headers.
-    """
-    handler = TestLambdaHandler()
+class TestBaseLambdaHandler:
+    def setup_method(self):
+        """
+        Set up a new instance of TestLambdaHandler before each test.
+        """
+        self.handler = TestLambdaHandler()
 
-    assert handler.event is None
-    assert handler.context is None
-    assert handler.body is None
-    assert handler.headers is None
+    def test_initialization(self):
+        """
+        Test that the TestLambdaHandler initializes with None for event, context,
+        body, and headers.
+        """
+        assert self.handler.event is None
+        assert self.handler.context is None
+        assert self.handler.body is None
+        assert self.handler.headers is None
 
+    @patch("builtins.print")
+    def test_on_error(self, mock_print):
+        """
+        Test that the _on_error method correctly handles exceptions and prints
+        the error and traceback.
+        """
+        error_message = "Test Exception"
 
-def test_test_lambda_handler_on_error():
-    """
-    Test that the _on_error method correctly handles exceptions and
-    prints the error and traceback.
-    """
-    handler = TestLambdaHandler()
-    error_message = "Test Exception"
-
-    with patch("builtins.print") as mock_print:
         try:
             raise Exception(error_message)
         except Exception as e:
             traceback_info = (
                 traceback.format_exc()
             )  # Capture the traceback within the except block
-            handler._on_error(e, traceback_info)
+            self.handler._on_error(e, traceback_info)
 
         # Check that the error message is printed
         mock_print.assert_any_call(
@@ -49,11 +52,9 @@ def test_test_lambda_handler_on_error():
         # Check if the debug statements are showing correct values
         mock_print.assert_any_call(traceback_info)
 
-
-def test_test_lambda_handler_handle():
-    """
-    Test that the _handle method in the TestLambdaHandler works as expected.
-    """
-    handler = TestLambdaHandler()
-    result = handler._handle()
-    assert result == "Test handle executed"
+    def test_handle(self):
+        """
+        Test that the _handle method in the TestLambdaHandler works as expected.
+        """
+        result = self.handler._handle()
+        assert result == "Test handle executed"
