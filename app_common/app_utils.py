@@ -131,16 +131,15 @@ def run_command(command, cwd=None, shell=False):
     :param cwd: The directory to run the command in.
     :param shell: Whether to use a shell to run the command.
     """
-    # Check if running on Windows and replace 'python3.11' with the full path to python.exe
-    if platform.system() == "Windows" and "python3.11" in command:
-        # Use the full path of python3.11
-        # TODO: #17 Fix it getting the correct path from the user's Windows environment
-        # Another option is to use the sys.executable variable, but it may not be the correct version
-        # python_path = r"C:\Users\lsieb\AppData\Local\Programs\Python\Python311\python.exe"
-        new_alias = "python"
-        command = [new_alias if arg == "python3.11" else arg for arg in command]
+    # TODO: #17 Fix it getting the correct path from the user's Windows environment
+    # Replace 'python3.11' with the current Python executable
+    if isinstance(command, list):
+        command = [sys.executable if arg == "python3.11" else arg for arg in command]
+    elif isinstance(command, str):
+        command = command.replace("python3.11", sys.executable)
 
     result = subprocess.run(command, shell=shell, cwd=cwd)
     
     if result.returncode != 0:
-        sys.exit(result.returncode) 
+        sys.exit(result.returncode)
+
