@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 88  # Default line length that works well with Flake8
-target-version = ['py38']  # Set to the version of Python you are using
+target-version = ['py311']  # Set to the version of Python you are using
 skip-string-normalization = false
 
 [tool.isort]
