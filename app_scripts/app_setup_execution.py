@@ -89,7 +89,7 @@ def main():
     Main function to parse command-line arguments and call the appropriate function.
     """
     error_msg_args = (
-        "Usage: la_setup.py --<setup_venv|install_requirements|deploy|run_tests>"
+        "Usage: app_setup.py --<setup_venv|install_requirements|deploy|run_tests>"
     )
     if len(sys.argv) != 4:
         _do_log(error_msg_args)
@@ -120,12 +120,12 @@ def main():
             "installation of Python requirements, and the application's deploy."
         )
         _do_log(
-            "Usage: python3.11 la_setup.py --<setup_venv|install_requirements|deploy>"
+            "Usage: python3.11 app_setup.py --<setup_venv|install_requirements|deploy>"
         )
         _do_log("Examples:")
-        _do_log("python3.11 la_setup.py --setup_venv")
-        _do_log("python3.11 la_setup.py --install_requirements")
-        _do_log("python3.11 la_setup.py --deploy")
+        _do_log("python3.11 app_setup.py --setup_venv")
+        _do_log("python3.11 app_setup.py --install_requirements")
+        _do_log("python3.11 app_setup.py --deploy")
     else:
         _do_log(f"Unknown action: {action}")
         _do_log(error_msg_args)
