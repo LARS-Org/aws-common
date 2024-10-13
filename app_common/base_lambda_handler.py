@@ -389,6 +389,8 @@ class BaseLambdaHandler(ABC):
         # Ensure payload is a JSON string
         if isinstance(payload, dict):
             payload = json.dumps(payload, cls=DecimalEncoder)
+        elif payload is not None and not isinstance(payload, str):
+            payload = json.dumps(payload)
 
         # Set invocation type based on async_invoke
         invocation_type = "Event" if async_invoke else "RequestResponse"
