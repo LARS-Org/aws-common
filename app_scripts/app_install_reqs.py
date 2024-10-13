@@ -32,22 +32,44 @@ def _upgrade_pip(do_log_func, run_cmd_func):
     do_log_func("*** Upgraded pip.")
 
 
-def _install_essential_git_repositories(do_log_func, run_cmd_func, target=None):
+def _install_from_aws_common(do_log_func, run_cmd_func, target=None):
     """
-    Installs/upgrades essential modules dependencies directly from GitHub.
-    # pip install git+https://github.com/LARS-Org/aws-common
-    """
-    essential_git_repos = [
-        "https://github.com/LARS-Org/aws-common",
-    ]
+    Installs or upgrades essential module dependencies directly from
+    the aws-common project.
 
-    for repo in essential_git_repos:
-        do_log_func(f"*** Installing/upgrading {repo} (will be quiet)...")
-        cmd_list = ["pip", "install", "--upgrade", f"git+{repo}", "--quiet"]
-        if target:
-            cmd_list.append("--target")
-            cmd_list.append(target)
-        run_cmd_func(cmd_list)
+    Parameters:
+    do_log_func (function): A logging function to record progress messages.
+    run_cmd_func (function): A function to execute shell commands.
+    target (str, optional): The target directory where the dependencies
+                            should be installed. Defaults to None.
+    """
+    # Install dependencies from the requirements.txt file located
+    # in the aws-common project.
+    # The requirements.txt file is expected to be in the
+    # parent directory of this script.
+    aws_common_req_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "requirements.txt"
+    )
+    do_log_func(f"*** Installing/upgrading from {aws_common_req_path}...")
+
+    cmd_list = ["pip", "install", "-r", aws_common_req_path, "--quiet"]
+    if target:
+        cmd_list += ["--target", target]
+    run_cmd_func(cmd_list)
+
+    # Install the aws-common project directly from the Git repository.
+    # This is necessary while the aws-common project is not published on PyPI.
+    # TODO: #26 Include aws-common project in the PyPI repository.
+    git_repo_url = "https://github.com/LARS-Org/aws-common"
+    do_log_func(f"*** Installing/upgrading {git_repo_url} (will be quiet)...")
+
+    cmd_list = ["pip", "install", "--upgrade", f"git+{git_repo_url}", "--quiet"]
+    if target:
+        cmd_list += ["--target", target]
+    run_cmd_func(cmd_list)
+
+    # Log completion of the installation/upgrade process.
+    do_log_func("*** Installation/upgrade completed successfully.")
 
 
 def _install_requirements_recursively(do_log_func, run_cmd_func):
@@ -99,9 +121,7 @@ def _install_requirements_recursively(do_log_func, run_cmd_func):
             os.makedirs(packages_dir)
 
             # install the git repositories in the packages directory
-            _install_essential_git_repositories(
-                do_log_func, run_cmd_func, target=packages_dir
-            )
+            _install_from_aws_common(do_log_func, run_cmd_func, target=packages_dir)
 
             if pip_requirements_file in files:
                 do_log_func(f"Installing {pip_requirements_path} (will be quiet)...")
@@ -153,7 +173,7 @@ def do_install_req(do_log_func, run_cmd_func):
     _purge_pip_cache(do_log_func, run_cmd_func)
     _remove_pip_selfcheck(do_log_func)
     _upgrade_pip(do_log_func, run_cmd_func)
-    _install_essential_git_repositories(do_log_func, run_cmd_func)
+    _install_from_aws_common(do_log_func, run_cmd_func)
     _install_requirements_recursively(do_log_func, run_cmd_func)
     _install_other_packages(do_log_func, run_cmd_func)
     do_log_func("*** All done!!!")
