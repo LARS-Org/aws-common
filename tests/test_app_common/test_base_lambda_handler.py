@@ -251,6 +251,78 @@ class TestBaseLambdaHandler:
         result = self.handler._load_body_from_event()
         assert result == {"key": "value"}
 
+    def test_load_body_from_event_empty_body(self):
+        """
+        Test that _load_body_from_event returns None when the body is empty.
+        """
+        self.handler.event = {"body": ""}
+        result = self.handler._load_body_from_event()
+        assert result is None
+
+    def test_load_body_from_event_empty_sqs_record(self):
+        """
+        Test that _load_body_from_event returns None when the SQS record body is empty.
+        """
+        self.handler.event = {"Records": [{"body": ""}]}
+        result = self.handler._load_body_from_event()
+        assert result is None
+
+    def test_load_body_from_event_empty_sns_message(self):
+        """
+        Test that _load_body_from_event returns None when the SNS message is empty.
+        """
+        self.handler.event = {"Records": [{"Sns": {"Message": ""}}]}
+        result = self.handler._load_body_from_event()
+        assert result is None
+
+    def test_load_body_from_event_none_raw_body(self):
+        """
+        Test that _load_body_from_event returns None when raw_body is None.
+        """
+        self.handler.event = {"body": None}
+        result = self.handler._load_body_from_event()
+        assert result is None
+
+    def test_load_body_from_event_plain_dict_body(self):
+        """
+        Test that _load_body_from_event returns the body when it is a dictionary.
+        """
+        self.handler.event = {"body": {"key": "value"}}
+        result = self.handler._load_body_from_event()
+        assert result == {"key": "value"}
+        assert isinstance(result, dict)
+
+    def test_load_body_from_event_parsed_json_dict(self):
+        """
+        Test that _load_body_from_event returns the parsed body when it is a valid
+        JSON string that results in a dictionary.
+        """
+        json_body = json.dumps({"key": "value"})
+        self.handler.event = {"body": json_body}
+        result = self.handler._load_body_from_event()
+        assert result == {"key": "value"}
+        assert isinstance(result, dict)
+
+    def test_load_body_from_event_sqs_record_as_dict(self):
+        """
+        Test that _load_body_from_event returns the body as a dictionary from
+        SQS records.
+        """
+        self.handler.event = {"Records": [{"body": '{"key": "value"}'}]}
+        result = self.handler._load_body_from_event()
+        assert result == {"key": "value"}
+        assert isinstance(result, dict)
+
+    def test_load_body_from_event_sns_message_as_dict(self):
+        """
+        Test that _load_body_from_event returns the body as a dictionary from
+        SNS message.
+        """
+        self.handler.event = {"Records": [{"Sns": {"Message": '{"key": "value"}'}}]}
+        result = self.handler._load_body_from_event()
+        assert result == {"key": "value"}
+        assert isinstance(result, dict)
+
     @patch("app_common.base_lambda_handler.do_log")
     def test_log_basic_info(self, mock_do_log):
         """
@@ -437,8 +509,8 @@ class TestBaseLambdaHandler:
 
         # Verify that logging occurred
         mock_do_log.assert_any_call(
-            f"** send_message_to_sqs: queue_url{queue_url}\n"
-            f"message_body{message_body}\nmessage_group_id{message_group_id}"
+            f"** send_message_to_sqs: queue_url {queue_url}\n"
+            f"message_body {message_body}\nmessage_group_id {message_group_id}"
         )
         mock_do_log.assert_any_call(f"** send_message_to_sqs: response{response}")
 
@@ -474,9 +546,9 @@ class TestBaseLambdaHandler:
 
         # Verify that logging occurred
         mock_do_log.assert_any_call(
-            f"** send_message_to_sqs: queue_url{queue_url}\n"
-            f"message_body{json.dumps(message_body)}\n"
-            f"message_group_id{message_group_id}"
+            f"** send_message_to_sqs: queue_url {queue_url}\n"
+            f"message_body {json.dumps(message_body)}\n"
+            f"message_group_id {message_group_id}"
         )
         mock_do_log.assert_any_call(f"** send_message_to_sqs: response{response}")
 
