@@ -41,14 +41,6 @@ class TestLambdaHandler(BaseLambdaHandler):
         # Overridden implementation for testing accounting of execution costs
         print("Accounting execution costs...")
 
-    @patch("builtins.print")
-    def test_on_error(self, mock_print):
-        """
-        Test that the _on_error method correctly handles exceptions and prints
-        the error and traceback.
-        """
-        error_message = "Test Exception"
-
 
 class SecurityFailingTestLambdaHandler(TestLambdaHandler):
     def _security_check(self) -> bool:
