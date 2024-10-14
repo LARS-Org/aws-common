@@ -7,7 +7,12 @@ import json
 import os
 from abc import ABC, abstractmethod
 
-import boto3
+try:
+    import boto3
+except ImportError:
+    raise RuntimeError(
+        "boto3 is not available; ensure it is provided by the runtime environment."
+    )
 
 from app_common.app_utils import DecimalEncoder, do_log
 
