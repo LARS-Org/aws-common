@@ -28,36 +28,29 @@ class DynamoDBBase:
         Decimal, which is the correct numerical type for DynamoDB.
 
         Args:
-            item (dict, list or object): The dictionary, list or object containing
-            the data to be converted and inserted into DynamoDB.
-
+            item (dict, list, float or object): The dictionary, list, float, or object
+            containing the data to be converted and inserted into DynamoDB.
 
         Returns:
-            dict: A new dictionary with all float values converted to Decimals, suitable
-                for DynamoDB storage.
+            dict, list, Decimal, or original value: A new dictionary or list with all
+            float values converted to Decimals, suitable for DynamoDB storage, or the
+            original value.
         """
-        converted_item = {}
-
-        items_to_convert = []
-
         if isinstance(item, dict):
-            items_to_convert = item.items()
-        elif hasattr(item, "__dict__"):
-            items_to_convert = item.__dict__.items()
+            # Recursively convert all dictionary values
+            return {k: self.__convert_to_decimal(v) for k, v in item.items()}
+        elif isinstance(item, list):
+            # Recursively convert all items in the list
+            return [self.__convert_to_decimal(i) for i in item]
         elif isinstance(item, float):
+            # Convert floats to Decimals
             return Decimal(str(round(item, 10)))
-
-        for k, v in items_to_convert:
-            if isinstance(v, float):
-                converted_item[k] = Decimal(str(round(v, 10)))
-            elif isinstance(v, dict):
-                converted_item[k] = self.__convert_to_decimal(v)
-            elif isinstance(v, list):
-                converted_item[k] = [self.__convert_to_decimal(i) for i in v]
-            else:
-                converted_item[k] = v
-
-        return converted_item
+        elif hasattr(item, "__dict__"):
+            # If item has a __dict__ attribute, treat it like a dictionary
+            return {k: self.__convert_to_decimal(v) for k, v in item.__dict__.items()}
+        else:
+            # If the item is not a dict, list, or float, return it as-is
+            return item
 
     def add(self, item):
         """Adds an item to the DynamoDB table."""
