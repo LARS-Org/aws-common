@@ -123,21 +123,24 @@ def _install_requirements_recursively(do_log_func, run_cmd_func):
             # install the git repositories in the packages directory
             _install_from_aws_common(do_log_func, run_cmd_func, target=packages_dir)
 
-            if pip_requirements_file in files:
-                do_log_func(f"Installing {pip_requirements_path} (will be quiet)...")
-                # install the requirements in the packages directory
-                run_cmd_func(
-                    [
-                        "pip",
-                        "install",
-                        "-r",
-                        pip_requirements_path,
-                        "--target",
-                        packages_dir,
-                        "--upgrade",
-                        "--quiet",
-                    ]
-                )
+            for pip_requirements_file in pip_requirements_file_list:
+                if pip_requirements_file in files:
+                    do_log_func(
+                        f"Installing {pip_requirements_path} (will be quiet)..."
+                    )
+                    # install the requirements in the packages directory
+                    run_cmd_func(
+                        [
+                            "pip",
+                            "install",
+                            "-r",
+                            pip_requirements_path,
+                            "--target",
+                            packages_dir,
+                            "--upgrade",
+                            "--quiet",
+                        ]
+                    )
 
         # Special handling for AWS Lambda Layers
         if root.startswith(("layers", "./layers")):
