@@ -91,7 +91,7 @@ class TestDynamoDBBase(TestCase):
         """Test retrieving items by key when no matching items exist."""
         # No items are added to the table
         result = self.dynamodb_base._get_last_items_by_key("id", "nonexistent", 1)
-        self.assertIsNone(result)
+        self.assertEqual(result, [])
 
     def test_get_last_items_by_key_less_than_k(self):
         """Test retrieving items by key when fewer than k items exist."""
