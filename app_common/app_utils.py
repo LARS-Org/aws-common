@@ -203,10 +203,13 @@ def do_log_2(obj, title=None, log_limit: int = 150, list_sample_size: int = 2):
             if keys_are_simple and values_are_simple:
                 # There are only simple keys and values in the dictionary,
                 # let's try to fit as much content as we can in each line.
-                # Key/value pairs are sorted in ascending order by the length
-                # of the key added to the length of the value.
+                # Key/value pairs are sorted in descending order by the length
+                # of the key added to the length of the value, i.e., longer
+                # key/value pairs are processed first.
                 keys = list(current_obj.keys())
-                keys.sort(key=lambda k: len(str(k)) + len(str(current_obj[k])))
+                keys.sort(
+                    key=lambda k: len(str(k)) + len(str(current_obj[k])), reverse=True
+                )
                 key_idx = 0
                 key_count = len(keys)
 

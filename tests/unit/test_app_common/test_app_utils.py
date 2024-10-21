@@ -634,3 +634,77 @@ class TestDoLog2:
         log_limit = 50
         do_log_2(obj, log_limit=log_limit)
         mock_print.assert_called_once_with(("A" * log_limit) + "…")
+
+    @patch("builtins.print")
+    def test_do_log_2_multiple_dict_scenarios(self, mock_print):
+        """
+        Test logging multiple dictionary scenarios.
+        """
+
+        # Simplest case
+        log_limit = 50
+        do_log_2({"key_1": "value_1"}, log_limit=log_limit)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'dict'>]; Key count = 1\n" "--key_1=value_1"
+        )
+
+        # Key/value pairs are sorted in descending order by the length of the
+        # key added to the length of the value
+        do_log_2({"key_1": "value_1", "key_2": "long_value_2"}, log_limit=log_limit)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'dict'>]; Key count = 2\n"
+            "--key_2=long_value_2 key_1=value_1"
+        )
+
+        # Key/value pairs are sorted in descending order by the length of the
+        # key added to the length of the value. Also, keys and/or values that
+        # are too long get truncated
+        do_log_2(
+            {"key_1": "value_1", "key_2": "long_value_2", "key_3": "A" * 50},
+            log_limit=log_limit,
+        )
+        mock_print.assert_called_with(
+            "[TYPE: <class 'dict'>]; Key count = 3\n"
+            "--key_3=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…\n"
+            "--key_2=long_value_2 key_1=value_1"
+        )
+
+    @patch("builtins.print")
+    def test_do_log_2_multiple_list_scenarios(self, mock_print):
+        """
+        Test logging multiple list scenarios.
+        """
+
+        # Simplest case
+        log_limit = 50
+        do_log_2(["value_1"], log_limit=log_limit)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'list'>]; Size = 1; Sample:\n" "--[0]=value_1"
+        )
+
+        # Two elements
+        do_log_2(["value_1", 42], log_limit=log_limit)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'list'>]; Size = 2; Sample:\n" "--[0]=value_1 [1]=42"
+        )
+
+        # Three elements (truncated to two)
+        three_elems_list = ["value_1", 42, False]
+        do_log_2(three_elems_list, log_limit=log_limit, list_sample_size=2)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\n" "--[0]=value_1 [1]=42"
+        )
+
+        # Three elements (no truncation)
+        do_log_2(three_elems_list, log_limit=log_limit, list_sample_size=3)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\n"
+            "--[0]=value_1 [1]=42 [2]=False"
+        )
+
+        # Two elements (text truncated)
+        do_log_2(["A" * 30, "B" * 30], log_limit=log_limit, list_sample_size=3)
+        mock_print.assert_called_with(
+            "[TYPE: <class 'list'>]; Size = 2; Sample:\n"
+            "--[0]=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA [1]=BBBBBBBB…"
+        )
