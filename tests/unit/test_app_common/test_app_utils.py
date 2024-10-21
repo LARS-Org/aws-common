@@ -8,6 +8,7 @@ import pytest
 from app_common.app_utils import (
     DecimalEncoder,
     do_log,
+    do_log_2,
     get_first_element,
     get_first_non_none,
     is_numeric,
@@ -325,7 +326,7 @@ class TestDoLog:
         test_str = "a" * 200
         do_log(test_str, log_limit=50)
         mock_print.assert_called_once_with(
-            "\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n"
+            "\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…\n"
         )
 
     @patch("builtins.print")
@@ -422,7 +423,7 @@ class TestDoLog:
         obj = SampleObject()
         do_log(obj, log_limit=50)
         mock_print.assert_called_once_with(
-            "\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...\n"
+            "\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…\n"
         )
 
 
@@ -506,3 +507,130 @@ class TestRunCommand:
         mock_subprocess_run.assert_called_once_with(
             "echo Hello World", shell=True, cwd=None
         )
+
+
+class TestDoLog2:
+    @patch("builtins.print")
+    def test_do_log_2_string(self, mock_print):
+        """
+        Test logging a simple string.
+        """
+        test_str = "Hello, this is a test."
+        do_log_2(test_str)
+        mock_print.assert_called_once_with(test_str)
+
+    @patch("builtins.print")
+    def test_do_log_2_truncated_string(self, mock_print):
+        """
+        Test logging a long string that should be truncated.
+        """
+        test_str = "a" * 200
+        log_limit = 50
+        do_log_2(test_str, log_limit=log_limit)
+        mock_print.assert_called_once_with(("a" * log_limit) + "…")
+
+    @patch("builtins.print")
+    def test_do_log_2_with_title(self, mock_print):
+        """
+        Test logging with a title.
+        """
+        test_str = "Test string"
+        title = "Title"
+        do_log_2(test_str, title=title)
+        mock_print.assert_any_call(title)
+        mock_print.assert_any_call(test_str)
+
+    @patch("builtins.print")
+    def test_do_log_2_dictionary(self, mock_print):
+        """
+        Test logging a dictionary.
+        """
+        test_dict = {
+            "key1": "value1",
+            "key2": {"subkey1": "subvalue1", "subkey2": "subvalue2"},
+        }
+        do_log_2(test_dict, log_limit=50)
+        calls = [call[0][0] for call in mock_print.call_args_list]
+        assert (
+            "[TYPE: <class 'dict'>]; Key count = 2\n"
+            "--key2\n"
+            "--key1\n"
+            "----value1\n"
+            "----[TYPE: <class 'dict'>]; Key count = 2\n"
+            "------subkey1=subvalue1 subkey2=subvalue2"
+            in calls  # noqa:E501  # noqa:E131
+        )
+
+    @patch("builtins.print")
+    def test_do_log_2_list(self, mock_print):
+        """
+        Test logging a list.
+        """
+        test_list = ["element1", "element2", "element3"]
+        do_log_2(test_list, log_limit=50)
+        calls = [call[0][0] for call in mock_print.call_args_list]
+        assert (
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\n"
+            "--[0]=element1 [1]=element2" in calls
+        )
+
+    @patch("builtins.print")
+    def test_do_log_2_empty_dictionary(self, mock_print):
+        """
+        Test logging an empty dictionary.
+        """
+        do_log_2({})
+        mock_print.assert_called_once_with("[TYPE: <class 'dict'>]; Key count = 0")
+
+    @patch("builtins.print")
+    def test_do_log_2_empty_list(self, mock_print):
+        """
+        Test logging an empty list.
+        """
+        do_log_2([])
+        mock_print.assert_called_once_with("[TYPE: <class 'list'>]; Size = 0; Sample:")
+
+    @patch("builtins.print")
+    def test_do_log_2_default_case_int(self, mock_print):
+        """
+        Test logging an integer (default case).
+        """
+        do_log_2(42, log_limit=50)
+        mock_print.assert_called_once_with("42")
+
+    @patch("builtins.print")
+    def test_do_log_2_default_case_float(self, mock_print):
+        """
+        Test logging a float (default case).
+        """
+        do_log_2(3.14159, log_limit=50)
+        mock_print.assert_called_once_with("3.14159")
+
+    @patch("builtins.print")
+    def test_do_log_2_default_case_object(self, mock_print):
+        """
+        Test logging an object instance (default case).
+        """
+
+        class SampleObject:
+            def __str__(self):
+                return "SampleObjectRepresentation"
+
+        obj = SampleObject()
+        do_log_2(obj, log_limit=50)
+        mock_print.assert_called_once_with("SampleObjectRepresentation")
+
+    @patch("builtins.print")
+    def test_do_log_2_truncated_object(self, mock_print):
+        """
+        Test logging a long object string representation that should be truncated.
+        """
+
+        class SampleObject:
+            def __str__(self):
+                return "A" * 200
+
+        obj = SampleObject()
+        log_limit = 50
+        do_log_2(obj, log_limit=log_limit)
+        mock_print.assert_called_once_with(("A" * log_limit) + "…")
