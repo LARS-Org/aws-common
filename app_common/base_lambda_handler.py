@@ -14,7 +14,7 @@ except ImportError:
         "boto3 is not available; ensure it is provided by the runtime environment."
     )
 
-from app_common.app_utils import DecimalEncoder, do_log
+from app_common.app_utils import DecimalEncoder, do_log_2
 
 
 class BaseLambdaHandler(ABC):
@@ -163,9 +163,9 @@ class BaseLambdaHandler(ABC):
         Logs basic information about the lambda invocation, such as the
         `event`, `context` and `body` parameters received from AWS.
         """
-        do_log(self.event, title="*** Event")
-        do_log(self.context, title="*** Context")
-        do_log(self.body, title="*** Body")
+        do_log_2(self.event, title="*** Event")
+        do_log_2(self.context, title="*** Context")
+        do_log_2(self.body, title="*** Body")
 
     def __call__(self, event, context):
         """
@@ -312,7 +312,7 @@ class BaseLambdaHandler(ABC):
             message_body = json.dumps(message_body, cls=DecimalEncoder)
 
         if verbose:
-            do_log(
+            do_log_2(
                 f"** send_message_to_sqs: queue_url {queue_url}\n"
                 f"message_body {message_body}\n"
                 f"message_group_id {message_group_id}"
@@ -329,7 +329,7 @@ class BaseLambdaHandler(ABC):
         )
 
         if verbose:
-            do_log(f"** send_message_to_sqs: response{response}")
+            do_log_2(f"** send_message_to_sqs: response{response}")
 
         return response
 
@@ -357,17 +357,17 @@ class BaseLambdaHandler(ABC):
             _return = sns_client.publish(TopicArn=topic_arn, Message=message)
 
         if verbose:
-            do_log(f"Message published to SNS topic: {topic_arn}")
-            do_log(message, title="Message")
+            do_log_2(f"Message published to SNS topic: {topic_arn}")
+            do_log_2(message, title="Message")
 
         return _return
 
     @staticmethod
     def do_log(obj, title=None, log_limit=5000):
         """
-        Wrapper function to call the do_log function from the app_utils module.
+        Wrapper function to call the do_log_2() function from the app_utils module.
         """
-        do_log(obj, title=title, log_limit=log_limit)
+        do_log_2(obj, title=title, log_limit=log_limit)
 
     @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
