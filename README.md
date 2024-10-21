@@ -63,10 +63,26 @@ pipenv run isort .
 pipenv run flake8 .
 ```
 These tools help maintain code quality and consistency across the project.
-## Unit tests
+
+## Tests
+
+### Unit tests
 To run unit tests, after installing required modules for development, run:
 ```bash
 pipenv shell
-pytest
+pytest tests/unit
 ```
 
+### Integration tests
+To run unit tests, after installing required modules for development, run:
+```bash
+pipenv shell
+pytest tests/integration
+```
+
+### All tests
+You can also run all tests (unit and integration) by running:
+```bash
+pipenv shell
+pytest 
+```
