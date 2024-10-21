@@ -134,9 +134,8 @@ class DynamoDBBase:
             ScanIndexForward=scan_index_forward,
             Limit=k,
         )
-        if response["Items"]:
-            return response["Items"][0:k]
-        return None
+
+        return response["Items"][:k] if response["Items"] else []
 
     def _get_batch_writer(self):
         """
