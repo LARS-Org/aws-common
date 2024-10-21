@@ -315,7 +315,7 @@ class TestBaseLambdaHandler:
         assert result == {"key": "value"}
         assert isinstance(result, dict)
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_log_basic_info(self, mock_do_log):
         """
         Test that _log_basic_info calls do_log with event, context, and body.
@@ -331,7 +331,7 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_any_call(self.handler.context, title="*** Context")
         mock_do_log.assert_any_call(self.handler.body, title="*** Body")
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     @patch("builtins.print")
     def test_call_method(self, mock_print, mock_do_log):
         """
@@ -362,7 +362,7 @@ class TestBaseLambdaHandler:
         # Verify that the finishing print statement is called
         mock_print.assert_any_call("** Finishing the lambda execution")
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     @patch("builtins.print")
     def test_call_method_with_custom_response(self, mock_print, mock_do_log):
         """
@@ -473,7 +473,7 @@ class TestBaseLambdaHandler:
         )
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_send_message_to_sqs(self, mock_do_log, mock_boto3_client):
         """
         Test that send_message_to_sqs sends a message to the SQS queue and
@@ -510,7 +510,7 @@ class TestBaseLambdaHandler:
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_send_message_to_sqs_non_string_body(self, mock_do_log, mock_boto3_client):
         """
         Test that send_message_to_sqs correctly handles non-string message bodies
@@ -548,7 +548,7 @@ class TestBaseLambdaHandler:
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_publish_to_sns(self, mock_do_log, mock_boto3_client):
         """
         Test that publish_to_sns sends a message to the SNS topic and logs
@@ -582,7 +582,7 @@ class TestBaseLambdaHandler:
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_publish_to_sns_non_string_message(self, mock_do_log, mock_boto3_client):
         """
         Test that publish_to_sns correctly handles non-string message bodies
@@ -615,7 +615,7 @@ class TestBaseLambdaHandler:
         # Check the response
         assert response == {"MessageId": "12345"}
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.do_log_2")
     def test_do_log_wrapper(self, mock_do_log):
         """
         Test that the do_log wrapper method correctly calls the do_log function
