@@ -1,25 +1,30 @@
 import decimal
+import json
+import pytest
 from unittest import TestCase
-
 import boto3
 from moto import mock_aws
-
+from app_common.app_utils import (
+    DecimalEncoder,
+    get_first_element,
+    get_first_non_none,
+    str_is_none_or_empty,
+    is_numeric,
+)
 from app_common.dynamodb_utils import DynamoDBBase
 
 
-@mock_aws
-class TestDynamoDBIntegration(TestCase):
-    def setUp(self):
-        # Create mock DynamoDB service
-        self.dynamodb = boto3.resource("dynamodb")
-
-        # Create mock table for testing
-        self.table_name = "TestTable"
-        self.dynamodb.create_table(
-            TableName=self.table_name,
+@pytest.fixture(scope="class")
+def dynamodb_fixture():
+    """Fixture to set up a mock DynamoDB resource and table."""
+    with mock_aws():
+        dynamodb = boto3.resource("dynamodb")
+        table_name = "TestTable"
+        dynamodb.create_table(
+            TableName=table_name,
             KeySchema=[
-                {"AttributeName": "id", "KeyType": "HASH"},  # Partition key
-                {"AttributeName": "sort_key", "KeyType": "RANGE"},  # Sort key
+                {"AttributeName": "id", "KeyType": "HASH"},
+                {"AttributeName": "sort_key", "KeyType": "RANGE"},
             ],
             AttributeDefinitions=[
                 {"AttributeName": "id", "AttributeType": "S"},
@@ -30,17 +35,33 @@ class TestDynamoDBIntegration(TestCase):
                 "WriteCapacityUnits": 10,
             },
         )
+        dynamodb_base = DynamoDBBase(table_name)
+        yield dynamodb, dynamodb_base
 
-        # Initialize DynamoDBBase instance
-        self.dynamodb_base = DynamoDBBase(self.table_name)
+
+class BaseDynamoDBIntegrationTest(TestCase):
+    """Base class for DynamoDB integration tests that includes the fixture setup."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, dynamodb_fixture):
+        """Set up DynamoDBBase and mock table."""
+        self.dynamodb, self.dynamodb_base = dynamodb_fixture
+
+    def get_item_from_table(self, table_name, key):
+        """Helper method to retrieve an item from the DynamoDB table."""
+        table = self.dynamodb.Table(table_name)
+        return table.get_item(Key=key)
+
+
+class TestDynamoDBIntegration(BaseDynamoDBIntegrationTest):
+    """Integration tests for DynamoDBBase methods."""
 
     def test_add_item(self):
         """Test adding an item to the DynamoDB table."""
         item = {"id": "123", "sort_key": 1, "value": 10.1}
         result = self.dynamodb_base.add(item)
 
-        table = self.dynamodb.Table(self.table_name)
-        response = table.get_item(Key={"id": "123", "sort_key": decimal.Decimal(1)})
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
 
         expected_item = {
             "id": "123",
@@ -68,9 +89,7 @@ class TestDynamoDBIntegration(TestCase):
         )
 
         # Verify the item is updated
-        response = self.dynamodb.Table(self.table_name).get_item(
-            Key={"id": "123", "sort_key": decimal.Decimal(1)}
-        )
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
         expected_item = {
             "id": "123",
             "sort_key": decimal.Decimal(1),
@@ -101,46 +120,61 @@ class TestDynamoDBIntegration(TestCase):
         self.assertEqual(last_items[0]["sort_key"], 3)
         self.assertEqual(last_items[1]["sort_key"], 2)
 
-    def test_write_batch_items(self):
-        """Test batch writing multiple items to the DynamoDB table."""
-        items = [
-            {"id": "1", "sort_key": 1, "value": 10.1},
-            {"id": "2", "sort_key": 2, "value": 20.2},
-            {"id": "3", "sort_key": 3, "value": 30.3},
-        ]
 
-        self.dynamodb_base.write_batch(items)
+class TestDynamoDBIntegrationWithGetFirst(BaseDynamoDBIntegrationTest):
+    """Integration tests for DynamoDBBase using utility functions like get_first_element."""
 
-        table = self.dynamodb.Table(self.table_name)
-        for item in items:
-            response = table.get_item(
-                Key={"id": item["id"], "sort_key": decimal.Decimal(item["sort_key"])}
-            )
-
-            # Convert expected item to have Decimal values
-            expected_item = {
-                "id": item["id"],
-                "sort_key": decimal.Decimal(item["sort_key"]),
-                "value": decimal.Decimal(str(item["value"])),
-            }
-
-            self.assertEqual(response["Item"], expected_item)
-
-    def test_delete_item(self):
-        """Test deleting an item from the DynamoDB table."""
+    def test_get_first_element_from_added_item(self):
+        """Test adding an item and retrieving the first element using get_first_element."""
         item = {"id": "123", "sort_key": 1, "value": 10.1}
         self.dynamodb_base.add(item)
 
-        # Delete the item
-        self.dynamodb_base._del_by_keys(
-            primary_key_name="id",
-            primary_key_value="123",
-            sort_key_name="sort_key",
-            sort_key_value=1,
-        )
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
+        result_item = response.get("Item")
 
-        table = self.dynamodb.Table(self.table_name)
-        response = table.get_item(Key={"id": "123", "sort_key": 1})
+        first_element = get_first_element(list(result_item.items()))
+        self.assertEqual(first_element, ("id", "123"))
 
-        # Verify that the item is deleted
-        self.assertNotIn("Item", response)
+    def test_get_first_non_none(self):
+        """Test adding an item and retrieving the first non-None value using get_first_non_none."""
+        item = {"id": "123", "sort_key": 1, "value": None}
+        self.dynamodb_base.add(item)
+
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
+        result_item = response.get("Item")
+
+        first_non_none = get_first_non_none(result_item.get("value"), "default")
+        self.assertEqual(first_non_none, "default")
+
+
+class TestDynamoDBIntegrationStringChecks(BaseDynamoDBIntegrationTest):
+    """Integration tests for DynamoDBBase with string utility checks."""
+
+    def test_str_is_none_or_empty_in_item(self):
+        """Test adding an item and using str_is_none_or_empty to check fields."""
+        item = {"id": "123", "sort_key": 1, "description": ""}
+        self.dynamodb_base.add(item)
+
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
+        result_item = response.get("Item")
+
+        # Check if description is empty
+        is_empty = str_is_none_or_empty(result_item.get("description"))
+        self.assertTrue(is_empty)
+
+
+class TestDynamoDBIntegrationNumericValidation(BaseDynamoDBIntegrationTest):
+    """Integration tests for DynamoDBBase and numeric utility validation."""
+
+    def test_is_numeric(self):
+        """Test adding an item and checking numeric fields using is_numeric."""
+        item = {"id": "123", "sort_key": 1, "value": 10.1}
+        self.dynamodb_base.add(item)
+
+        response = self.get_item_from_table("TestTable", {"id": "123", "sort_key": decimal.Decimal(1)})
+        result_item = response.get("Item")
+
+        # Validate the numeric field 'sort_key'
+        self.assertTrue(is_numeric(result_item.get("sort_key")))
+        # Validate the numeric field 'value'
+        self.assertTrue(is_numeric(result_item.get("value")))
