@@ -10,7 +10,7 @@ multi_line_output = 3  # Ensure similar line breaks for imports as Black
 include_trailing_comma = true  # Matches Black's default style
 
 [tool.poetry]
-name = "aws-common"
+name = "aws-commons"
 version = "0.1.0"
 description = "A shared package for common modules and constants for AWS Lambda applications"
 authors = ["LARS AI"]
