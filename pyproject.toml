@@ -16,6 +16,11 @@ description = "A shared package for common modules and constants for AWS Lambda 
 authors = ["LARS AI"]
 license = "MIT License"
 readme = "README.md"
+packages = [
+    { include = "app_common" },   # This includes your app_common folder
+    { include = "app_scripts" }   # This includes your app_scripts folder
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.11"
