@@ -6,7 +6,7 @@ on:
       - 'main'
   push:
     branches:
-      - '*'
+      - 'main'
 
 jobs:
     ci:
@@ -26,8 +26,8 @@ jobs:
 
         - name: Install dependencies
           run: |
-            poetry install 
-            poetry install --dev
+            poetry install --no-root
+            poetry install --with dev --no-root
 
         - name: Check code formatting with black
           run: poetry run black --check .
