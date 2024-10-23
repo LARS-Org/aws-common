@@ -365,7 +365,7 @@ class BaseLambdaHandler(ABC):
     @staticmethod
     def do_log(obj, title=None, log_limit=5000):
         """
-        Wrapper function to call the do_log function from the app_utils module.
+        Wrapper function to call the do_log() function from the app_utils module.
         """
         do_log(obj, title=title, log_limit=log_limit)
 
