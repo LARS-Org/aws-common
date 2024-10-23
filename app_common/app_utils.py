@@ -74,7 +74,13 @@ def is_numeric(x) -> bool:
         return False
 
 
-def do_log(obj, title=None, log_limit: int = 150, list_sample_size: int = 2):
+def do_log(
+    obj,
+    title=None,
+    log_limit: int = 150,
+    list_sample_size: int = 2,
+    line_break_chars: str = "\r",
+):
     """
     Logs an object to the console, truncating the content if large.
     If the object is a dictionary, this method logs its keys and values.
@@ -369,7 +375,7 @@ def do_log(obj, title=None, log_limit: int = 150, list_sample_size: int = 2):
         print(title)
 
     # Print the generated log for the given object
-    print("\n".join(output_lines))
+    print(line_break_chars.join(output_lines))
 
 
 def run_command(command, cwd=None, shell=False):

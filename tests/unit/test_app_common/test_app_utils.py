@@ -350,9 +350,9 @@ class TestDoLog:
         do_log(test_dict, log_limit=50)
         calls = [call[0][0] for call in mock_print.call_args_list]
         assert (
-            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\n"
-            "--key1=value1\n"
-            "--key2=[TYPE: <class 'dict'>]; Key count = 2; Key/va…\n"
+            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
+            "--key1=value1\r"
+            "--key2=[TYPE: <class 'dict'>]; Key count = 2; Key/va…\r"
             "----subkey1=subvalue1 subkey2=subvalue2" in calls  # noqa:E501  # noqa:E131
         )
 
@@ -365,7 +365,7 @@ class TestDoLog:
         do_log(test_list, log_limit=50)
         calls = [call[0][0] for call in mock_print.call_args_list]
         assert (
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\n"
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
             "--[0]=element1 [1]=element2" in calls
         )
 
@@ -440,7 +440,7 @@ class TestDoLog:
         log_limit = 50
         do_log({"key_1": "value_1"}, log_limit=log_limit)
         mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 1; Key/value pairs:\n"
+            "[TYPE: <class 'dict'>]; Key count = 1; Key/value pairs:\r"
             "--key_1=value_1"
         )
 
@@ -449,7 +449,7 @@ class TestDoLog:
         # key added to the length of the value
         do_log({"key_1": "value_1", "key_2": "long_value_2"}, log_limit=log_limit)
         mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\n"
+            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
             "--key_2=long_value_2 key_1=value_1"
         )
 
@@ -462,8 +462,8 @@ class TestDoLog:
             log_limit=log_limit,
         )
         mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 3; Key/value pairs:\n"
-            "--key_3=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…\n"
+            "[TYPE: <class 'dict'>]; Key count = 3; Key/value pairs:\r"
+            "--key_3=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…\r"
             "--key_2=long_value_2 key_1=value_1"
         )
 
@@ -477,33 +477,33 @@ class TestDoLog:
         log_limit = 50
         do_log(["value_1"], log_limit=log_limit)
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 1; Sample:\n" "--[0]=value_1"
+            "[TYPE: <class 'list'>]; Size = 1; Sample:\r" "--[0]=value_1"
         )
 
         # Two elements.
         do_log(["value_1", 42], log_limit=log_limit)
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 2; Sample:\n" "--[0]=value_1 [1]=42"
+            "[TYPE: <class 'list'>]; Size = 2; Sample:\r" "--[0]=value_1 [1]=42"
         )
 
         # Three elements, truncated to two.
         three_elems_list = ["value_1", 42, False]
         do_log(three_elems_list, log_limit=log_limit, list_sample_size=2)
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\n" "--[0]=value_1 [1]=42"
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\r" "--[0]=value_1 [1]=42"
         )
 
         # Three elements, without element truncation.
         do_log(three_elems_list, log_limit=log_limit, list_sample_size=3)
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\n"
+            "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
             "--[0]=value_1 [1]=42 [2]=False"
         )
 
         # Two elements, with line truncation.
         do_log(["A" * 30, "B" * 30], log_limit=log_limit, list_sample_size=3)
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 2; Sample:\n"
+            "[TYPE: <class 'list'>]; Size = 2; Sample:\r"
             "--[0]=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA [1]=BBBBBBBB…"
         )
 
@@ -529,11 +529,11 @@ class TestDoLog:
             log_limit=log_limit,
         )
         mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 5; Key/value pairs:\n"
-            + "--key_1=Foobar key_3=False key_2=42\n"
-            + "--key_4=[TYPE: <class 'list'>]; Size = 3; Sample:\n"
-            + "----[0]=value_4_1 [1]=value_4_2\n"
-            + "--key_5=[TYPE: <class 'dict'>]; Key count = 2; Key/v…\n"
+            "[TYPE: <class 'dict'>]; Key count = 5; Key/value pairs:\r"
+            + "--key_1=Foobar key_3=False key_2=42\r"
+            + "--key_4=[TYPE: <class 'list'>]; Size = 3; Sample:\r"
+            + "----[0]=value_4_1 [1]=value_4_2\r"
+            + "--key_5=[TYPE: <class 'dict'>]; Key count = 2; Key/v…\r"
             + "----key_5_1=value_5_1 key_5_2=52"
         )
 
@@ -550,13 +550,13 @@ class TestDoLog:
         ]
         do_log(my_list, log_limit=log_limit, list_sample_size=len(my_list))
         mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 5; Sample:\n"
-            "--Foobar\n"
-            "--42\n"
-            "--False\n"
-            "--[TYPE: <class 'list'>]; Size = 3; Sample:\n"
-            "----[0]=Barfoo [1]=256 [2]=True\n"
-            "--[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\n"
+            "[TYPE: <class 'list'>]; Size = 5; Sample:\r"
+            "--Foobar\r"
+            "--42\r"
+            "--False\r"
+            "--[TYPE: <class 'list'>]; Size = 3; Sample:\r"
+            "----[0]=Barfoo [1]=256 [2]=True\r"
+            "--[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
             "----key_5_1=value_5_1 key_5_2=52"
         )
 
