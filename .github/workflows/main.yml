@@ -50,8 +50,13 @@ jobs:
           run: |
             poetry run pytest tests/integration
 
+        - name: Configure Git identity
+          run: |
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "GitHub Actions Bot"
+
         - name: Bump version based on CI checks
-          if: github.ref == 'refs/heads/main' && success()
+          if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
           env:
             MANUAL_VERSION: ${{ secrets.MANUAL_VERSION }}
           run: |
@@ -64,6 +69,6 @@ jobs:
             fi
 
         - name: Push version bump to Git and tag
-          if: github.ref == 'refs/heads/main' && success()
+          if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
           run: |
             git push origin main --follow-tags
