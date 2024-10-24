@@ -11,7 +11,7 @@ include_trailing_comma = true  # Matches Black's default style
 
 [tool.poetry]
 name = "aws-cdk-common"
-version = "0.1.1"
+version = "0.1.2"
 description = "A shared package for common modules and constants for AWS Lambda applications"
 authors = ["LARS AI"]
 license = "MIT License"
