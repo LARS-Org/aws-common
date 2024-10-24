@@ -70,3 +70,4 @@ You can also run all tests (unit and integration) by running:
 poetry shell
 pytest 
 ```
+Test version bump
