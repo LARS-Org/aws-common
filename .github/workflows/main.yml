@@ -12,64 +12,57 @@ on:
 jobs:
     ci:
         runs-on: ubuntu-latest
-
+        environment: CI_CD
         steps:
-        - uses: actions/checkout@v4
-
-        - name: Install poetry
-          run: |
-            pipx install poetry
-
-        - name: Set up Python 3.11
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
-            cache: 'poetry'
-
-        - name: Install dependencies
-          run: |
-            poetry install --no-root
-            poetry install --with dev --no-root
-
-        - name: Check code formatting with black
-          run: | 
-            poetry run black --check .
-
-        - name: Sort imports with isort
-          run: |
-            poetry run isort --check-only .
-
-        - name: Check code quality with flake8
-          run: |
-            poetry run flake8 .
-
-        - name: Unit tests with pytest
-          run: |
-            poetry run pytest tests/unit
-
-        - name: Integration tests with pytest
-          run: |
-            poetry run pytest tests/integration
-
-        - name: Configure Git identity
-          run: |
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git config --global user.name "GitHub Actions Bot"
-
-        - name: Bump version based on CI checks
-          if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
-          env:
-            MANUAL_VERSION: ${{ secrets.MANUAL_VERSION }}
-          run: |
-            if [ -z "${{ env.MANUAL_VERSION }}" ]; then
-              # Automatic patch bump if no manual version is provided
-              poetry run bump2version patch
-            else
-              # Use manual version if specified
-              poetry run bump2version --new-version ${{ env.MANUAL_VERSION }} patch
-            fi
-
-        - name: Push version bump to Git and tag
-          if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
-          run: |
-            git push origin HEAD --follow-tags
+          - uses: actions/checkout@v4
+          - uses: actions/create-github-app-token@v1
+            id: app-token
+            with:
+              app-id: ${{ vars.VERSION_BUMPER_APPID }}
+              private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+          - name: Set up Python 3.11
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.11'
+          - name: Install poetry
+            run: |
+              pipx install poetry
+          - name: Install dependencies
+            run: |
+              poetry install --no-root
+              poetry install --with dev --no-root
+          - name: Check code formatting with black
+            run: | 
+              poetry run black --check .
+          - name: Sort imports with isort
+            run: |
+              poetry run isort --check-only .
+          - name: Check code quality with flake8
+            run: |
+              poetry run flake8 .
+          - name: Unit tests with pytest
+            run: |
+              poetry run pytest tests/unit
+          - name: Integration tests with pytest
+            run: |
+              poetry run pytest tests/integration
+          - name: Configure Git identity
+            run: |
+              git config --global user.email "github-actions[bot]@users.noreply.github.com"
+              git config --global user.name "GitHub Actions Bot"
+          - name: Bump version based on CI checks
+            if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
+            env:
+              MANUAL_VERSION: ${{ secrets.MANUAL_VERSION }}
+            run: |
+              if [ -z "${{ env.MANUAL_VERSION }}" ]; then
+                # Automatic patch bump if no manual version is provided
+                poetry run bump2version patch
+              else
+                # Use manual version if specified
+                poetry run bump2version --new-version ${{ env.MANUAL_VERSION }} patch
+              fi
+          - name: Push version bump to Git and tag
+            if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' && success()
+            run: |
+              git push origin HEAD --follow-tags
