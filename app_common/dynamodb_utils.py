@@ -71,11 +71,11 @@ class DynamoDBBase:
         )
         return key
 
-    def get_all(self) -> list:
+    def get_all(self, limit=100) -> list:
         """
-        Retrieves all objects from the DynamoDB table.
+        Retrieves all objects from the DynamoDB table, considering the limit.
         """
-        return self._table.scan()["Items"]
+        return self._table.scan(Limit=limit)["Items"]
 
     def _get_by_keys(
         self,
