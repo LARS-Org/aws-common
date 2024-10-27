@@ -71,6 +71,12 @@ class DynamoDBBase:
         )
         return key
 
+    def get_all(self) -> list:
+        """
+        Retrieves all objects from the DynamoDB table.
+        """
+        return self._table.scan()["Items"]
+
     def _get_by_keys(
         self,
         primary_key_name,
