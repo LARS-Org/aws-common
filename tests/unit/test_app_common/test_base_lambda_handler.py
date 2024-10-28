@@ -357,7 +357,7 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_any_call(self.handler.body, title="*** Body")
 
         # Verify that _do_the_job was called
-        assert response == self.handler.response()
+        assert response == self.handler.response(message="Job done")
 
         # Verify that the finishing print statement is called
         mock_print.assert_any_call("** Finishing the lambda execution")
