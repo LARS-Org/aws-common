@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app_common.app_utils import DecimalEncoder
 from app_common.base_lambda_handler import BaseLambdaHandler
 
 
@@ -785,7 +786,7 @@ class TestBaseLambdaHandler:
         expected_response = {
             "statusCode": 201,
             "headers": {"Content-Type": "application/json"},
-            "body": {"key": "value"},
+            "body": json.dumps({"key": "value"}, cls=DecimalEncoder),
         }
         assert response == expected_response
 
