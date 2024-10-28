@@ -75,6 +75,9 @@ class DynamoDBBase:
         """
         Retrieves all objects from the DynamoDB table, considering the limit.
         """
+        if limit == 0:
+            return []  # Return an empty list if limit is zero
+
         return self._table.scan(Limit=limit)["Items"]
 
     def _get_by_keys(
