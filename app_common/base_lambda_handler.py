@@ -426,6 +426,7 @@ class BaseLambdaHandler(ABC):
         status_code=200,
         headers=None,
         body=None,
+        message=None,
     ):
         """
         Returns a response object that can be returned by a Lambda handler.
@@ -433,11 +434,18 @@ class BaseLambdaHandler(ABC):
         if headers is None:
             headers = {"Content-Type": "application/json"}
 
-        return {
+        dict_response = {
             "statusCode": status_code,
             "headers": headers,
-            "body": json.dumps(body, cls=DecimalEncoder) if body else None,
+            "body": body,
         }
+
+        # Add a message to the response if provided and body is empty
+        # This is useful to avoid problems with API Gateway
+        if not body and message:
+            dict_response["message"] = message
+
+        return dict_response
 
     @staticmethod
     def body_or_none(event: dict):
