@@ -293,6 +293,76 @@ class TestDynamoDBBase(TestCase):
         result = self.dynamodb_base.get_by_partition_key(pk_name="id", pk_value="123")
         self.assertEqual(result, [item1, item2])
 
+    def test_get_all_with_default_limit(self):
+        """Test retrieving all items with the default limit."""
+        # Adding sample items
+        items = [
+            {"id": f"{i}", "sort_key": "1", "value": Decimal(f"{i}.23")}
+            for i in range(3)
+        ]
+        self.dynamodb_base.write_batch(items)
+
+        # Call get_all with default limit (100)
+        result = self.dynamodb_base.get_all()
+        self.assertTrue(len(result) <= 100)
+        self.assertEqual(result, items)
+
+    def test_get_all_with_custom_limit(self):
+        """Test retrieving items with a custom limit."""
+        # Adding sample items
+        items = [
+            {"id": f"{i}", "sort_key": "1", "value": Decimal(f"{i}.23")}
+            for i in range(5)
+        ]
+        self.dynamodb_base.write_batch(items)
+
+        # Call get_all with a limit of 2
+        result = self.dynamodb_base.get_all(limit=2)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result, items[:2])
+
+    def test_get_all_with_zero_limit(self):
+        """Test retrieving items with a limit of zero."""
+        # Adding sample items
+        items = [
+            {"id": f"{i}", "sort_key": "1", "value": Decimal(f"{i}.23")}
+            for i in range(3)
+        ]
+        self.dynamodb_base.write_batch(items)
+
+        # Call get_all with a limit of 0
+        result = self.dynamodb_base.get_all(limit=0)
+        self.assertEqual(result, [])
+
+    def test_get_all_with_large_limit(self):
+        """Test retrieving items with a limit greater than available items."""
+        # Adding sample items
+        items = [
+            {"id": f"{i}", "sort_key": "1", "value": Decimal(f"{i}.23")}
+            for i in range(3)
+        ]
+        self.dynamodb_base.write_batch(items)
+
+        # Call get_all with a large limit (10)
+        result = self.dynamodb_base.get_all(limit=10)
+        self.assertEqual(len(result), len(items))
+        self.assertEqual(result, items)
+
+    def test_get_all_no_items(self):
+        """Test retrieving items when there are no items in the table."""
+        result = self.dynamodb_base.get_all()
+        self.assertEqual(result, [])
+
+    def test_get_all_handles_scan_error(self):
+        """Test handling of an error during the scan operation."""
+        # Mock scan to raise an exception
+        self.dynamodb_base._table.scan = lambda *args, **kwargs: (_ for _ in ()).throw(
+            Exception("DynamoDB scan error")
+        )
+
+        with self.assertRaises(Exception, msg="DynamoDB scan error"):
+            self.dynamodb_base.get_all()
+
     def test_delete_item(self):
         """Test deleting an item from the DynamoDB table."""
         item = {"id": "123", "sort_key": "abc", "value": Decimal("1.23")}
