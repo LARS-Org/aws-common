@@ -159,5 +159,5 @@ class TestBaseLambdaHandler:
         handler = TestLambdaHandler()
         response = handler(mock_event, mock_context)
 
-        assert response["message"] is None
+        assert "message" not in response
         assert response["statusCode"] == 200
