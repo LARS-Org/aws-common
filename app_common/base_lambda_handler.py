@@ -424,20 +424,19 @@ class BaseLambdaHandler(ABC):
     @staticmethod
     def response(
         status_code=200,
-        headers={"Content-Type": "application/json"},
-        message="OK",
+        headers=None,
         body=None,
     ):
         """
         Returns a response object that can be returned by a Lambda handler.
         """
-        # TODO: #14 Review implementation of this method. Necessary message and body?
-        # TODO: #16 Bug when calling this method with body as a dict. Bad response.
+        if headers is None:
+            headers = {"Content-Type": "application/json"}
+
         return {
             "statusCode": status_code,
             "headers": headers,
-            "message": message,
-            "body": body,
+            "body": json.dumps(body, cls=DecimalEncoder) if body else None,
         }
 
     @staticmethod
