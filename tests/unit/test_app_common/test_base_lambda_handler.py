@@ -357,7 +357,7 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_any_call(self.handler.body, title="*** Body")
 
         # Verify that _do_the_job was called
-        assert response == self.handler.response(message="Job done")
+        assert response == self.handler.response()
 
         # Verify that the finishing print statement is called
         mock_print.assert_any_call("** Finishing the lambda execution")
@@ -780,13 +780,11 @@ class TestBaseLambdaHandler:
         response = self.handler.response(
             status_code=201,
             headers={"Content-Type": "application/json"},
-            message="Created",
             body={"key": "value"},
         )
         expected_response = {
             "statusCode": 201,
             "headers": {"Content-Type": "application/json"},
-            "message": "Created",
             "body": {"key": "value"},
         }
         assert response == expected_response
