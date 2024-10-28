@@ -437,7 +437,7 @@ class BaseLambdaHandler(ABC):
         dict_response = {
             "statusCode": status_code,
             "headers": headers,
-            "body": body,
+            "body": json.dumps(body, cls=DecimalEncoder) if body else None,
         }
 
         # Add a message to the response if provided and body is empty
