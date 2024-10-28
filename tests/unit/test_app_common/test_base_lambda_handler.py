@@ -799,7 +799,6 @@ class TestBaseLambdaHandler:
         expected_response = {
             "statusCode": 200,
             "headers": {"Content-Type": "application/json"},
-            "message": "OK",
             "body": None,
         }
         assert response == expected_response
