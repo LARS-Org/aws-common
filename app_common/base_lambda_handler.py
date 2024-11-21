@@ -460,7 +460,7 @@ class BaseLambdaHandler(ABC):
         BaseLambdaHandler.do_log(
             title=(
                 f"** Invoking Lambda: {function_name} "
-                "- Invocation_type: {invocation_type}"
+                f"- Invocation_type: {invocation_type}"
             ),
             obj=payload,
         )
