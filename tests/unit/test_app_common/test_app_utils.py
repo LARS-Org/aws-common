@@ -7,7 +7,7 @@ import pytest
 
 from app_common.app_utils import (
     DecimalEncoder,
-    do_log,
+    _do_log,
     get_first_element,
     get_first_non_none,
     is_numeric,
@@ -314,7 +314,7 @@ class TestDoLog:
         Test logging a simple string.
         """
         test_str = "Hello, this is a test."
-        do_log(test_str)
+        _do_log(test_str)
         mock_print.assert_called_once_with(test_str)
 
     @patch("builtins.print")
@@ -324,7 +324,7 @@ class TestDoLog:
         """
         test_str = "a" * 200
         log_limit = 50
-        do_log(test_str, log_limit=log_limit)
+        _do_log(test_str, log_limit=log_limit)
         mock_print.assert_called_once_with(("a" * log_limit) + "…")
 
     @patch("builtins.print")
@@ -334,7 +334,7 @@ class TestDoLog:
         """
         test_str = "Test string"
         title = "Title"
-        do_log(test_str, title=title)
+        _do_log(test_str, title=title)
         mock_print.assert_any_call(title)
         mock_print.assert_any_call(test_str)
 
@@ -347,7 +347,7 @@ class TestDoLog:
             "key1": "value1",
             "key2": {"subkey1": "subvalue1", "subkey2": "subvalue2"},
         }
-        do_log(test_dict, log_limit=50)
+        _do_log(test_dict, log_limit=50)
         calls = [call[0][0] for call in mock_print.call_args_list]
         assert (
             "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
@@ -362,7 +362,7 @@ class TestDoLog:
         Test logging a list.
         """
         test_list = ["element1", "element2", "element3"]
-        do_log(test_list, log_limit=50)
+        _do_log(test_list, log_limit=50)
         calls = [call[0][0] for call in mock_print.call_args_list]
         assert (
             "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
@@ -374,7 +374,7 @@ class TestDoLog:
         """
         Test logging an empty dictionary.
         """
-        do_log({})
+        _do_log({})
         mock_print.assert_called_once_with("[TYPE: <class 'dict'>]; Key count = 0")
 
     @patch("builtins.print")
@@ -382,7 +382,7 @@ class TestDoLog:
         """
         Test logging an empty list.
         """
-        do_log([])
+        _do_log([])
         mock_print.assert_called_once_with("[TYPE: <class 'list'>]; Size = 0")
 
     @patch("builtins.print")
@@ -390,7 +390,7 @@ class TestDoLog:
         """
         Test logging an integer (default case).
         """
-        do_log(42, log_limit=50)
+        _do_log(42, log_limit=50)
         mock_print.assert_called_once_with("42")
 
     @patch("builtins.print")
@@ -398,7 +398,7 @@ class TestDoLog:
         """
         Test logging a float (default case).
         """
-        do_log(3.14159, log_limit=50)
+        _do_log(3.14159, log_limit=50)
         mock_print.assert_called_once_with("3.14159")
 
     @patch("builtins.print")
@@ -412,7 +412,7 @@ class TestDoLog:
                 return "SampleObjectRepresentation"
 
         obj = SampleObject()
-        do_log(obj, log_limit=50)
+        _do_log(obj, log_limit=50)
         mock_print.assert_called_once_with("SampleObjectRepresentation")
 
     @patch("builtins.print")
@@ -427,7 +427,7 @@ class TestDoLog:
 
         obj = SampleObject()
         log_limit = 50
-        do_log(obj, log_limit=log_limit)
+        _do_log(obj, log_limit=log_limit)
         mock_print.assert_called_once_with(("A" * log_limit) + "…")
 
     @patch("builtins.print")
@@ -438,7 +438,7 @@ class TestDoLog:
 
         # A single key/value pair.
         log_limit = 50
-        do_log({"key_1": "value_1"}, log_limit=log_limit)
+        _do_log({"key_1": "value_1"}, log_limit=log_limit)
         mock_print.assert_called_with(
             "[TYPE: <class 'dict'>]; Key count = 1; Key/value pairs:\r"
             "--key_1=value_1"
@@ -447,7 +447,7 @@ class TestDoLog:
         # Multiple key/value pairs without line truncation.
         # Key/value pairs are sorted in descending order by the length of the
         # key added to the length of the value
-        do_log({"key_1": "value_1", "key_2": "long_value_2"}, log_limit=log_limit)
+        _do_log({"key_1": "value_1", "key_2": "long_value_2"}, log_limit=log_limit)
         mock_print.assert_called_with(
             "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
             "--key_2=long_value_2 key_1=value_1"
@@ -457,7 +457,7 @@ class TestDoLog:
         # Key/value pairs are sorted in descending order by the length of the
         # key added to the length of the value. Also, keys and/or values that
         # are too long get truncated
-        do_log(
+        _do_log(
             {"key_1": "value_1", "key_2": "long_value_2", "key_3": "A" * 50},
             log_limit=log_limit,
         )
@@ -475,33 +475,33 @@ class TestDoLog:
 
         # A single element.
         log_limit = 50
-        do_log(["value_1"], log_limit=log_limit)
+        _do_log(["value_1"], log_limit=log_limit)
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 1; Sample:\r" "--[0]=value_1"
         )
 
         # Two elements.
-        do_log(["value_1", 42], log_limit=log_limit)
+        _do_log(["value_1", 42], log_limit=log_limit)
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 2; Sample:\r" "--[0]=value_1 [1]=42"
         )
 
         # Three elements, truncated to two.
         three_elems_list = ["value_1", 42, False]
-        do_log(three_elems_list, log_limit=log_limit, list_sample_size=2)
+        _do_log(three_elems_list, log_limit=log_limit, list_sample_size=2)
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 3; Sample:\r" "--[0]=value_1 [1]=42"
         )
 
         # Three elements, without element truncation.
-        do_log(three_elems_list, log_limit=log_limit, list_sample_size=3)
+        _do_log(three_elems_list, log_limit=log_limit, list_sample_size=3)
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
             "--[0]=value_1 [1]=42 [2]=False"
         )
 
         # Two elements, with line truncation.
-        do_log(["A" * 30, "B" * 30], log_limit=log_limit, list_sample_size=3)
+        _do_log(["A" * 30, "B" * 30], log_limit=log_limit, list_sample_size=3)
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 2; Sample:\r"
             "--[0]=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA [1]=BBBBBBBB…"
@@ -518,7 +518,7 @@ class TestDoLog:
         # Key/value pairs are sorted in descending order by the length of the
         # key added to the length of the value.
         log_limit = 50
-        do_log(
+        _do_log(
             {
                 "key_1": "Foobar",
                 "key_2": 42,
@@ -548,7 +548,7 @@ class TestDoLog:
             ["Barfoo", 256, True],
             {"key_5_1": "value_5_1", "key_5_2": 52},
         ]
-        do_log(my_list, log_limit=log_limit, list_sample_size=len(my_list))
+        _do_log(my_list, log_limit=log_limit, list_sample_size=len(my_list))
         mock_print.assert_called_with(
             "[TYPE: <class 'list'>]; Size = 5; Sample:\r"
             "--Foobar\r"

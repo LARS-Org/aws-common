@@ -27,11 +27,11 @@ class TestLambdaHandler(BaseLambdaHandler):
 
     def _before_handle(self):
         # Simple overridden implementation for testing
-        print("Overridden before_handle() executed")
+        self.do_log("Overridden before_handle() executed")
 
     def _after_handle(self):
         # Simple overridden implementation for testing
-        print("Overridden after_handle() executed")
+        self.do_log("Overridden after_handle() executed")
 
     def _do_the_job(self):
         # Simple implementation for testing
@@ -39,12 +39,12 @@ class TestLambdaHandler(BaseLambdaHandler):
 
     def _account_execution_costs(self):
         # Overridden implementation for testing accounting of execution costs
-        print("Accounting execution costs...")
+        self.do_log("Accounting execution costs...")
 
 
 class SecurityFailingTestLambdaHandler(TestLambdaHandler):
     def _security_check(self) -> bool:
-        print("Security check called in SecurityFailingTestLambdaHandler.")
+        self.do_log("Security check called in SecurityFailingTestLambdaHandler.")
         return False
 
 
@@ -65,8 +65,8 @@ class TestBaseLambdaHandler:
         assert self.handler.body is None
         assert self.handler.headers is None
 
-    @patch("builtins.print")
-    def test_on_error(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_on_error(self, mock_do_log):
         """
         Test that the _on_error method correctly handles exceptions and prints
         the error and traceback.
@@ -78,9 +78,11 @@ class TestBaseLambdaHandler:
         except Exception as e:
             self.handler._on_error(e)
 
+        print(mock_do_log.mock_calls)
+
         # Check that the error message is printed
-        mock_print.assert_any_call(
-            f"BaseLambdaHandler::OnError():: Error occurred:\n{error_message}"
+        mock_do_log.assert_any_call(
+            f"BaseLambdaHandler::OnError():: Error occurred:\n{error_message}",
         )
 
     def test_handle(self):
@@ -104,8 +106,8 @@ class TestBaseLambdaHandler:
         """
         assert self.handler._security_check() is False
 
-    @patch("builtins.print")
-    def test_before_handle_default(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_before_handle_default(self, mock_do_log):
         """
         Test that the default _before_handle method prints the expected message.
         """
@@ -113,10 +115,12 @@ class TestBaseLambdaHandler:
         base_handler._before_handle()
 
         # Check that the default message is printed
-        mock_print.assert_any_call("Running before_handle()...")
+        mock_do_log.assert_any_call(
+            "Running before_handle()...",
+        )
 
-    @patch("builtins.print")
-    def test_before_handle_overridden(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_before_handle_overridden(self, mock_do_log):
         """
         Test that the overridden _before_handle method in TestLambdaHandler
         prints the overridden message.
@@ -124,10 +128,12 @@ class TestBaseLambdaHandler:
         self.handler._before_handle()
 
         # Check that the overridden message is printed
-        mock_print.assert_any_call("Overridden before_handle() executed")
+        mock_do_log.assert_any_call(
+            "Overridden before_handle() executed",
+        )
 
-    @patch("builtins.print")
-    def test_after_handle_default(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_after_handle_default(self, mock_do_log):
         """
         Test that the default _after_handle method prints the expected message.
         """
@@ -135,10 +141,12 @@ class TestBaseLambdaHandler:
         base_handler._after_handle()
 
         # Check that the default message is printed
-        mock_print.assert_any_call("Running after_handle()...")
+        mock_do_log.assert_any_call(
+            "Running after_handle()...",
+        )
 
-    @patch("builtins.print")
-    def test_after_handle_overridden(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_after_handle_overridden(self, mock_do_log):
         """
         Test that the overridden _after_handle method in TestLambdaHandler
         prints the overridden message.
@@ -146,7 +154,9 @@ class TestBaseLambdaHandler:
         self.handler._after_handle()
 
         # Check that the overridden message is printed
-        mock_print.assert_any_call("Overridden after_handle() executed")
+        mock_do_log.assert_any_call(
+            "Overridden after_handle() executed",
+        )
 
     def test_handle_not_implemented(self):
         """
@@ -217,16 +227,16 @@ class TestBaseLambdaHandler:
         result = self.handler._load_body_from_event()
         assert result == "sns message body"
 
-    @patch("builtins.print")
-    def test_load_body_from_event_invalid_json(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_load_body_from_event_invalid_json(self, mock_do_log):
         """
         Test that _load_body_from_event handles non-JSON body gracefully.
         """
         self.handler.event = {"body": "not a json"}
         result = self.handler._load_body_from_event()
         assert result == "not a json"
-        mock_print.assert_any_call(
-            "** error parsing body as json", mock_print.call_args[0][1]
+        mock_do_log.assert_any_call(
+            title="** Error parsing body as json", obj="not a json"
         )
 
     def test_load_body_from_event_valid_json(self):
@@ -309,7 +319,7 @@ class TestBaseLambdaHandler:
         assert result == {"key": "value"}
         assert isinstance(result, dict)
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_log_basic_info(self, mock_do_log):
         """
         Test that _log_basic_info calls do_log with event, context, and body.
@@ -325,9 +335,8 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_any_call(self.handler.context, title="*** Context")
         mock_do_log.assert_any_call(self.handler.body, title="*** Body")
 
-    @patch("app_common.base_lambda_handler.do_log")
-    @patch("builtins.print")
-    def test_call_method(self, mock_print, mock_do_log):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_call_method(self, mock_do_log):
         """
         Test that the __call__ method sets attributes, calls logging methods,
         and returns 200 OK response.
@@ -354,11 +363,12 @@ class TestBaseLambdaHandler:
         assert response == self.handler.response(message="Job done")
 
         # Verify that the finishing print statement is called
-        mock_print.assert_any_call("** Finishing the lambda execution")
+        mock_do_log.assert_any_call(
+            "** Finishing the lambda execution",
+        )
 
-    @patch("app_common.base_lambda_handler.do_log")
-    @patch("builtins.print")
-    def test_call_method_with_custom_response(self, mock_print, mock_do_log):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_call_method_with_custom_response(self, mock_do_log):
         """
         Test that the __call__ method returns a custom response if _do_the_job
         returns a response object.
@@ -379,7 +389,9 @@ class TestBaseLambdaHandler:
         assert response == {"statusCode": 200, "body": "Custom response"}
 
         # Verify that the finishing print statement is called
-        mock_print.assert_any_call("** Finishing the lambda execution")
+        mock_do_log.assert_any_call(
+            "** Finishing the lambda execution",
+        )
 
     def test_do_the_job_success_flow(self):
         """Test the entire flow of _do_the_job when all methods execute successfully."""
@@ -388,8 +400,8 @@ class TestBaseLambdaHandler:
         # Assert that the final return value is from `_handle()`
         assert result == "Job done"
 
-    @patch("builtins.print")
-    def test_account_execution_costs_default(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_account_execution_costs_default(self, mock_do_log):
         """
         Test that the default _account_execution_costs method does nothing.
         """
@@ -397,10 +409,10 @@ class TestBaseLambdaHandler:
         base_handler._account_execution_costs()
 
         # Ensure no print statement or action is performed
-        mock_print.assert_not_called()
+        mock_do_log.assert_not_called()
 
-    @patch("builtins.print")
-    def test_account_execution_costs_overridden(self, mock_print):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_account_execution_costs_overridden(self, mock_do_log):
         """
         Test that the overridden _account_execution_costs method in TestLambdaHandler
         prints the expected message.
@@ -408,7 +420,9 @@ class TestBaseLambdaHandler:
         self.handler._account_execution_costs()
 
         # Verify that the overridden message is printed
-        mock_print.assert_any_call("Accounting execution costs...")
+        mock_do_log.assert_any_call(
+            "Accounting execution costs...",
+        )
 
     def test_get_temp_dir_path(self):
         """
@@ -467,7 +481,7 @@ class TestBaseLambdaHandler:
         )
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_send_message_to_sqs(self, mock_do_log, mock_boto3_client):
         """
         Test that send_message_to_sqs sends a message to the SQS queue and
@@ -496,15 +510,17 @@ class TestBaseLambdaHandler:
         # Verify that logging occurred
         mock_do_log.assert_any_call(
             f"** send_message_to_sqs: queue_url {queue_url}\n"
-            f"message_body {message_body}\nmessage_group_id {message_group_id}"
+            f"message_body {message_body}\nmessage_group_id {message_group_id}",
         )
-        mock_do_log.assert_any_call(f"** send_message_to_sqs: response{response}")
+        mock_do_log.assert_any_call(
+            f"** send_message_to_sqs: response{response}",
+        )
 
         # Check the response
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_send_message_to_sqs_non_string_body(self, mock_do_log, mock_boto3_client):
         """
         Test that send_message_to_sqs correctly handles non-string message bodies
@@ -534,15 +550,17 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_any_call(
             f"** send_message_to_sqs: queue_url {queue_url}\n"
             f"message_body {json.dumps(message_body)}\n"
-            f"message_group_id {message_group_id}"
+            f"message_group_id {message_group_id}",
         )
-        mock_do_log.assert_any_call(f"** send_message_to_sqs: response{response}")
+        mock_do_log.assert_any_call(
+            f"** send_message_to_sqs: response{response}",
+        )
 
         # Check the response
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_publish_to_sns(self, mock_do_log, mock_boto3_client):
         """
         Test that publish_to_sns sends a message to the SNS topic and logs
@@ -569,14 +587,16 @@ class TestBaseLambdaHandler:
         )
 
         # Verify that logging occurred
-        mock_do_log.assert_any_call(f"Message published to SNS topic: {topic_arn}")
-        mock_do_log.assert_any_call(message, title="Message")
+        mock_do_log.assert_any_call(
+            obj=message,
+            title=f"Message published to SNS topic: {topic_arn}",
+        )
 
         # Check the response
         assert response == {"MessageId": "12345"}
 
     @patch("boto3.client")
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_publish_to_sns_non_string_message(self, mock_do_log, mock_boto3_client):
         """
         Test that publish_to_sns correctly handles non-string message bodies
@@ -603,13 +623,15 @@ class TestBaseLambdaHandler:
         )
 
         # Verify that logging occurred
-        mock_do_log.assert_any_call(f"Message published to SNS topic: {topic_arn}")
-        mock_do_log.assert_any_call(json.dumps(message), title="Message")
+        mock_do_log.assert_any_call(
+            obj=json.dumps(message),
+            title=f"Message published to SNS topic: {topic_arn}",
+        )
 
         # Check the response
         assert response == {"MessageId": "12345"}
 
-    @patch("app_common.base_lambda_handler.do_log")
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_do_log_wrapper(self, mock_do_log):
         """
         Test that the do_log wrapper method correctly calls the do_log function
@@ -626,8 +648,8 @@ class TestBaseLambdaHandler:
         mock_do_log.assert_called_once_with(obj, title=title, log_limit=log_limit)
 
     @patch("boto3.client")
-    @patch("builtins.print")
-    def test_invoke_lambda_async(self, mock_print, mock_boto3_client):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_invoke_lambda_async(self, mock_do_log, mock_boto3_client):
         """
         Test that invoke_lambda correctly invokes a Lambda function asynchronously
         and logs the operation.
@@ -653,13 +675,9 @@ class TestBaseLambdaHandler:
         )
 
         # Verify that logging occurred
-        mock_print.assert_any_call(
-            "** Invoking Lambda: function_name",
-            function_name,
-            "\ninvocation_type",
-            "Event",
-            "\npayload",
-            json.dumps(payload),
+        mock_do_log.assert_any_call(
+            title=f"** Invoking Lambda: {function_name} - Invocation_type: Event",
+            obj=json.dumps(payload),
         )
 
         # Check the response
@@ -688,8 +706,8 @@ class TestBaseLambdaHandler:
         mock_boto3_client.assert_not_called()
 
     @patch("boto3.client")
-    @patch("builtins.print")
-    def test_invoke_lambda_non_dict_payload(self, mock_print, mock_boto3_client):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_invoke_lambda_non_dict_payload(self, mock_do_log, mock_boto3_client):
         """
         Test that invoke_lambda correctly handles non-dictionary
         payloads by converting them to JSON.
@@ -716,21 +734,20 @@ class TestBaseLambdaHandler:
         )
 
         # Verify that logging occurred
-        mock_print.assert_any_call(
-            "** Invoking Lambda: function_name",
-            function_name,
-            "\ninvocation_type",
-            "RequestResponse",
-            "\npayload",
-            json.dumps(payload),
+        mock_do_log.assert_any_call(
+            title=(
+                f"** Invoking Lambda: {function_name} "
+                "- Invocation_type: RequestResponse"
+            ),
+            obj=json.dumps(payload),
         )
 
         # Check the response
         assert response == {"result": "success"}
 
     @patch("boto3.client")
-    @patch("builtins.print")
-    def test_invoke_lambda_no_payload(self, mock_print, mock_boto3_client):
+    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
+    def test_invoke_lambda_no_payload(self, mock_do_log, mock_boto3_client):
         """
         Test that invoke_lambda correctly handles invocation without a payload.
         """
@@ -755,13 +772,12 @@ class TestBaseLambdaHandler:
         )
 
         # Verify that logging occurred
-        mock_print.assert_any_call(
-            "** Invoking Lambda: function_name",
-            function_name,
-            "\ninvocation_type",
-            "RequestResponse",
-            "\npayload",
-            None,
+        mock_do_log.assert_any_call(
+            title=(
+                f"** Invoking Lambda: {function_name} "
+                "- Invocation_type: RequestResponse"
+            ),
+            obj=None,
         )
 
         # Check the response
