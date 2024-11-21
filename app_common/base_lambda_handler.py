@@ -9,12 +9,12 @@ from abc import ABC, abstractmethod
 
 try:
     import boto3
-except ImportError:
+except ImportError as exc:
     raise RuntimeError(
         "boto3 is not available; ensure it is provided by the runtime environment."
-    )
+    ) from exc
 
-from app_common.app_utils import DecimalEncoder, do_log
+from app_common import app_utils
 
 
 class BaseLambdaHandler(ABC):
@@ -80,7 +80,7 @@ class BaseLambdaHandler(ABC):
         to be overridden by subclasses.
         """
 
-        print("Running before_handle()...")
+        self.do_log("Running before_handle()...")
 
     def _after_handle(self):
         """
@@ -90,7 +90,7 @@ class BaseLambdaHandler(ABC):
         overridden by subclasses.
         """
 
-        print("Running after_handle()...")
+        self.do_log("Running after_handle()...")
 
     @abstractmethod
     def _handle(self):
@@ -148,8 +148,8 @@ class BaseLambdaHandler(ABC):
 
         try:
             self.body = json.loads(raw_body)
-        except Exception as e:
-            print("** error parsing body as json", e)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            self.do_log(title="** Error parsing body as json", obj=raw_body)
             # Use raw body if not JSON
             return raw_body
 
@@ -160,9 +160,9 @@ class BaseLambdaHandler(ABC):
         Logs basic information about the lambda invocation, such as the
         `event`, `context` and `body` parameters received from AWS.
         """
-        do_log(self.event, title="*** Event")
-        do_log(self.context, title="*** Context")
-        do_log(self.body, title="*** Body")
+        self.do_log(self.event, title="*** Event")
+        self.do_log(self.context, title="*** Context")
+        self.do_log(self.body, title="*** Body")
 
     def _handle_error_job(self) -> dict:
         """
@@ -205,7 +205,7 @@ class BaseLambdaHandler(ABC):
         job_return = None
         job_return = self._do_the_job()
 
-        print("** Finishing the lambda execution")
+        self.do_log("** Finishing the lambda execution")
 
         if isinstance(job_return, dict) and "statusCode" in job_return:
             # If the return is a response object, return it
@@ -365,10 +365,10 @@ class BaseLambdaHandler(ABC):
         if message_body is None:
             return None
         if not isinstance(message_body, str):
-            message_body = json.dumps(message_body, cls=DecimalEncoder)
+            message_body = json.dumps(message_body, cls=app_utils.DecimalEncoder)
 
         if verbose:
-            do_log(
+            BaseLambdaHandler.do_log(
                 f"** send_message_to_sqs: queue_url {queue_url}\n"
                 f"message_body {message_body}\n"
                 f"message_group_id {message_group_id}"
@@ -385,7 +385,7 @@ class BaseLambdaHandler(ABC):
         )
 
         if verbose:
-            do_log(f"** send_message_to_sqs: response{response}")
+            BaseLambdaHandler.do_log(f"** send_message_to_sqs: response{response}")
 
         return response
 
@@ -403,7 +403,7 @@ class BaseLambdaHandler(ABC):
         _return = None
         if not isinstance(message, str):
             # If the message is not a string, convert it to JSON
-            message = json.dumps(message, cls=DecimalEncoder)
+            message = json.dumps(message, cls=app_utils.DecimalEncoder)
 
         if subject:
             _return = sns_client.publish(
@@ -413,8 +413,9 @@ class BaseLambdaHandler(ABC):
             _return = sns_client.publish(TopicArn=topic_arn, Message=message)
 
         if verbose:
-            do_log(f"Message published to SNS topic: {topic_arn}")
-            do_log(message, title="Message")
+            BaseLambdaHandler.do_log(
+                obj=message, title=f"Message published to SNS topic: {topic_arn}"
+            )
 
         return _return
 
@@ -423,7 +424,7 @@ class BaseLambdaHandler(ABC):
         """
         Wrapper function to call the do_log() function from the app_utils module.
         """
-        do_log(obj, title=title, log_limit=log_limit)
+        app_utils._do_log(obj, title=title, log_limit=log_limit)
 
     @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
@@ -449,20 +450,19 @@ class BaseLambdaHandler(ABC):
 
         # Ensure payload is a JSON string
         if isinstance(payload, dict):
-            payload = json.dumps(payload, cls=DecimalEncoder)
+            payload = json.dumps(payload, cls=app_utils.DecimalEncoder)
         elif payload is not None and not isinstance(payload, str):
             payload = json.dumps(payload)
 
         # Set invocation type based on async_invoke
         invocation_type = "Event" if async_invoke else "RequestResponse"
 
-        print(
-            "** Invoking Lambda: function_name",
-            function_name,
-            "\ninvocation_type",
-            invocation_type,
-            "\npayload",
-            payload,
+        BaseLambdaHandler.do_log(
+            title=(
+                f"** Invoking Lambda: {function_name} "
+                "- Invocation_type: {invocation_type}"
+            ),
+            obj=payload,
         )
 
         # Invoke the Lambda function
@@ -493,7 +493,7 @@ class BaseLambdaHandler(ABC):
         dict_response = {
             "statusCode": status_code,
             "headers": headers,
-            "body": json.dumps(body, cls=DecimalEncoder) if body else None,
+            "body": json.dumps(body, cls=app_utils.DecimalEncoder) if body else None,
         }
 
         # Add a message to the response if provided and body is empty
