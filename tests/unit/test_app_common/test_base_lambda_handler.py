@@ -1,7 +1,6 @@
 import base64
 import json
 import os
-import traceback
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -77,18 +76,12 @@ class TestBaseLambdaHandler:
         try:
             raise Exception(error_message)
         except Exception as e:
-            traceback_info = (
-                traceback.format_exc()
-            )  # Capture the traceback within the except block
-            self.handler._on_error(e, traceback_info)
+            self.handler._on_error(e)
 
         # Check that the error message is printed
         mock_print.assert_any_call(
             f"BaseLambdaHandler::OnError():: Error occurred:\n{error_message}"
         )
-
-        # Check if the debug statements are showing correct values
-        mock_print.assert_any_call(traceback_info)
 
     def test_handle(self):
         """
