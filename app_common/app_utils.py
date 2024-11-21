@@ -74,7 +74,7 @@ def is_numeric(x) -> bool:
         return False
 
 
-def do_log(
+def _do_log(
     obj,
     title=None,
     log_limit: int = 150,
