@@ -49,19 +49,16 @@ class BaseLambdaHandler(ABC):
         self.body = None
         self.headers = None
 
-    def _on_error(self, e, traceback_info=None):
+    def _on_error(self, e: Exception):
         """
         Handles errors that occurred during a lambda function invocation. The
         parameter ``e`` is usually an exception instance with information on
         what caused the error.
         """
-        # TODO: #13 implement a better error handling mechanism
         # For now, just print the exception. This could be extended
         # to sending an email and logging to an external system.
         error_message = f"BaseLambdaHandler::OnError():: Error occurred:\n{e}"
-        print(error_message)
-        if traceback_info:
-            print(traceback_info)
+        self.do_log(error_message)
 
     def _security_check(self) -> bool:
         """
@@ -167,6 +164,17 @@ class BaseLambdaHandler(ABC):
         do_log(self.context, title="*** Context")
         do_log(self.body, title="*** Body")
 
+    def _handle_error_job(self) -> dict:
+        """
+        Handles an error job forwarded to the lambda function.
+        The default implentation just forwards the error message to the
+        next lambda function.
+        If a specific implementation is needed, this method should be overridden.
+        V.G.: Send an email to the support team or show a message to the user.
+        """
+        # just forwarding the payload object
+        return self.body
+
     def __call__(self, event, context):
         """
         Performs all the tasks required to service a lambda function
@@ -205,6 +213,23 @@ class BaseLambdaHandler(ABC):
         # else: return a 200 OK response
         return self.response(message=job_return)
 
+    def _get_sns_topic_listeners(self) -> list:
+        """
+        Returns a list of SNS topics to which the lambda function should
+        publish messages. This method is invoked by the ``__call__()`` method
+        in this class. The default implementation returns an empty list, and is
+        meant to be overridden by subclasses.
+        """
+        # method to be overridden by the subclass
+        return []
+
+    def _call_listeners(self, job_return):
+        """
+        Calls the listeners of the lambda.
+        """
+        for sns_topic in self._get_sns_topic_listeners():
+            self.publish_to_sns(topic_arn=sns_topic, message=job_return)
+
     def _do_the_job(self):
         """
         Performs the actual processing required to service a lambda function
@@ -226,7 +251,7 @@ class BaseLambdaHandler(ABC):
         ``account_execution_costs()`` even when an invocation to the previously
         mentioned methods fails.
         """
-
+        job_return = None
         # this method is called by the __call__ method
         try:
             if not self._security_check():
@@ -234,15 +259,46 @@ class BaseLambdaHandler(ABC):
                 return
             # else: it is ok to proceed
             self._before_handle()
-            print("** before_handle() is done.")
+            self.do_log("** before_handle() is done.")
             job_return = None
-            job_return = self._handle()
-            print("** handle() is done.")
+            if "error" in self.body:
+                # just forward the error message to be handled
+                # by the next lambda function
+                self.do_log("Error found in the input message.")
+                job_return = self._handle_error_job()
+                self.do_log("** handle_error_job() is done.")
+            else:
+                # the _handle event is called only when
+                # there are no errors on self.body
+                job_return = self._handle()
+                self.do_log("** handle() is done.")
             self._after_handle()
-            print("** after_handle() is done.")
+            self.do_log("** after_handle() is done.")
         except Exception as e:
+            # an exception occurred during the processing of the lambda
+            # set the job_return to the error message
+            job_return = {
+                "error": str(e),
+                "class_name": self.__class__.__name__,
+                "payload": self.body,
+                # AWS LambdaContext info
+                "lambda_context": {
+                    "aws_request_id": self.context.aws_request_id,
+                    "log_group_name": self.context.log_group_name,
+                    "log_stream_name": self.context.log_stream_name,
+                    "function_name": self.context.function_name,
+                    "function_version": self.context.function_version,
+                    "invoked_function_arn": self.context.invoked_function_arn,
+                    "memory_limit_in_mb": self.context.memory_limit_in_mb,
+                    "remaining_time_in_millis": (
+                        self.context.get_remaining_time_in_millis()
+                    ),
+                },
+            }
+            # call the on_error method
             self._on_error(e)
-            print("** on_error() is done.")
+
+        self._call_listeners(job_return)
 
         self._account_execution_costs()
         return job_return
