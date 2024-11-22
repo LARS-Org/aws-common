@@ -74,7 +74,7 @@ def _do_log(obj, title=None, log_limit: int = 150):
     """
     Wrapper function to call the do_log function from the app_utils module.
     """
-    _UTILS_MODULE.do_log(obj, title=title, log_limit=log_limit)
+    _UTILS_MODULE._do_log(obj, title=title, log_limit=log_limit)
 
 
 def _run_command(command, cwd=None, shell=False):
