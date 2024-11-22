@@ -220,7 +220,8 @@ class BaseLambdaHandler(ABC):
         in this class. The default implementation returns an empty list, and is
         meant to be overridden by subclasses.
         """
-        # method to be overridden by the subclass
+        # Returning a empty list in the default implementation.
+        # Override this method to return a list of SNS topics, if needed.
         return []
 
     def _call_listeners(self, job_return):
