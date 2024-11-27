@@ -262,7 +262,11 @@ class BaseLambdaHandler(ABC):
             self._before_handle()
             self.do_log("** before_handle() is done.")
             job_return = None
-            if "error" in self.body:
+
+            # Check if there is an "error" key on the body dict.
+            # Observe that, in some cases, the self.body is None
+            # (v.g.: an web application).
+            if self.body and isinstance(self.body, dict) and "error" in self.body:
                 # just forward the error message to be handled
                 # by the next lambda function
                 self.do_log("Error found in the input message.")
