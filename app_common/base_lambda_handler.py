@@ -264,7 +264,7 @@ class BaseLambdaHandler(ABC):
             job_return = None
 
             # Check if there is an "error" key on the body dict.
-            # Observe that, in some cases, the self.body is None
+            # Observe that, in some cases, the self.body can be None
             # (v.g.: an web application).
             if self.body and isinstance(self.body, dict) and "error" in self.body:
                 # just forward the error message to be handled
