@@ -1,3 +1,5 @@
 # Keep this file in sync with the requirements in pipenv configuration.
 # It is necessary for projects that use pip-compile to pin the dependencies
 resend==2.1.0
+aws-cdk-lib==2.160.0
+constructs>=10.0.0,<11.0.0
