@@ -7,12 +7,13 @@ This can be used as a base class for other utility features to be added to a sta
 
 import boto3
 import jsii
-from app_utils import _do_log
 from aws_cdk import Aspects, IAspect, Stack
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_ssm as ssm
 from constructs import Construct, IConstruct
+
+from app_common.app_utils import _do_log
 
 
 @jsii.implements(IAspect)
