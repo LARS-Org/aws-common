@@ -161,6 +161,18 @@ class AppCommonStack(Stack):
             self, topic_name, self.get_or_create_sns_topic_arn(topic_name)
         )
 
+    def _get_or_create_sns_topic_with_sms_param(
+        self, topic_name: str, sufix="-ARN"
+    ) -> sns.Topic:
+        """
+        Retrieves an SNS topic by name, creating the topic if it does not exist.
+        The ARN of the topic is stored in SSM Parameter Store.
+        """
+        sns_topic = self._get_or_create_sns_topic(topic_name)
+        param_name = f"{topic_name}{sufix}"
+        self._ensure_ssm_parameter(param_name, sns_topic.topic_arn)
+        return sns_topic
+
     def _get_error_topic_name(self) -> str:
         """
         The name of the SNS topic to which error notifications are sent.
