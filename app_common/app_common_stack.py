@@ -55,7 +55,7 @@ class AppCommonStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Create an SNS topic for error handling
-        self.error_handling_topic_arn = self.get_or_create_sns_topic_arn(
+        self.error_handling_topic_arn = self._get_or_create_sns_topic_arn(
             self._get_error_topic_name()
         )
 
@@ -98,7 +98,7 @@ class AppCommonStack(Stack):
         _do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
 
     @staticmethod
-    def get_or_create_sns_topic_arn(topic_name: str, automatic_creation=True) -> str:
+    def _get_or_create_sns_topic_arn(topic_name: str, automatic_creation=True) -> str:
         """
         Retrieves the ARN of an SNS topic by name, creating the topic
         if it does not exist.
@@ -140,7 +140,7 @@ class AppCommonStack(Stack):
             return topic_arn
 
     @staticmethod
-    def get_sns_topic_arn(topic_name: str) -> str:
+    def _get_sns_topic_arn(topic_name: str) -> str:
         """
         Retrieves the ARN of an SNS topic based on its name.
 
@@ -148,7 +148,7 @@ class AppCommonStack(Stack):
         :return: The ARN of the SNS topic.
         :raises ValueError: If the topic is not found.
         """
-        return AppCommonStack.get_or_create_sns_topic_arn(
+        return AppCommonStack._get_or_create_sns_topic_arn(
             topic_name, automatic_creation=False
         )
 
@@ -157,7 +157,7 @@ class AppCommonStack(Stack):
         Retrieves an SNS topic by name, creating the topic if it does not exist.
         """
         return sns.Topic.from_topic_arn(
-            self, topic_name, self.get_or_create_sns_topic_arn(topic_name)
+            self, topic_name, self._get_or_create_sns_topic_arn(topic_name)
         )
 
     def _get_or_create_sns_topic_with_sms_param(
@@ -185,7 +185,7 @@ class AppCommonStack(Stack):
         This method is used internally by the base class to send error notifications.
         If the topic does not exist, it is created automatically.
         """
-        return self.get_or_create_sns_topic_arn(self._get_error_topic_name())
+        return self._get_or_create_sns_topic_arn(self._get_error_topic_name())
 
     def _get_sns_topic_from_arn(self, topic_arn: str) -> sns.Topic:
         """
