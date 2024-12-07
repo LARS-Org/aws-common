@@ -158,7 +158,7 @@ class AppCommonStack(Stack):
         Retrieves an SNS topic by name, creating the topic if it does not exist.
         """
         return sns.Topic.from_topic_arn(
-            self, "SNSTopic", self.get_or_create_sns_topic_arn(topic_name)
+            self, topic_name, self.get_or_create_sns_topic_arn(topic_name)
         )
 
     def _get_error_topic_name(self) -> str:
