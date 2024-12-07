@@ -63,9 +63,8 @@ class AppCommonStack(Stack):
         # So, each specialized stack is going to have its own parameter
         # retrieving the ARN of the ErrorHandlingTopic
         self._ensure_ssm_parameter(
-            "error-handling-topic-arn",
+            "ErrorHandlingTopic-ARN",
             self.error_handling_topic_arn,
-            #            custom_path="app_common",
         )
 
         # Apply the aspect to grant publish permissions to all Lambda functions
