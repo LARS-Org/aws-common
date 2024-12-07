@@ -10,6 +10,7 @@ import jsii
 from aws_cdk import Aspects, IAspect, Stack
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
+from aws_cdk import aws_sns as sns
 from aws_cdk import aws_ssm as ssm
 from constructs import Construct, IConstruct
 
@@ -59,69 +60,43 @@ class AppCommonStack(Stack):
         )
 
         # Store the SNS topic ARN in SSM Parameter Store
+        # So, each specialized stack is going to have its own parameter
+        # retrieving the ARN of the ErrorHandlingTopic
         self._ensure_ssm_parameter(
-            "error_handling_topic_arn",
+            "error-handling-topic-arn",
             self.error_handling_topic_arn,
-            custom_path="app_common",
+            #            custom_path="app_common",
         )
 
         # Apply the aspect to grant publish permissions to all Lambda functions
         Aspects.of(self).add(GrantPublishToSnsAspect(self.error_handling_topic_arn))
 
     def _ensure_ssm_parameter(
-        self, parameter_name: str, value: str, custom_path=None
+        self, parameter_name: str, value: str, custom_path: str = None
     ) -> None:
         """
-        Ensures that an SSM parameter exists with the specified name and value.
-        If the parameter already exists with a different value, it logs a warning.
-        If the parameter does not exist, it creates the parameter.
+        Creates an SSM parameter during the deployment process.
 
         :param parameter_name: The name of the SSM parameter.
-        :param value: The value to set for the parameter if it doesn't exist.
+        :param value: The value to set for the parameter.
+        :param custom_path: Optional custom path for the parameter.
+                            Defaults to the stack name if not provided.
         """
-        if not custom_path:
-            # use the stack name as the path
-            custom_path = self.stack_name
+        # Use the custom path or default to the stack name
+        custom_path = custom_path or self.stack_name
 
-        # update the parameter name with the custom path
+        # Construct the full parameter name
         full_parameter_name = f"/{custom_path}/{parameter_name}"
 
-        try:
-            # Check if the parameter already exists
-            existing_value = ssm.StringParameter.value_from_lookup(
-                self, full_parameter_name
-            )
-            _do_log(
-                obj=(
-                    f"Found existing SSM parameter: "
-                    f"{full_parameter_name} "
-                    f"with value: {existing_value}"
-                )
-            )
+        # Create the SSM parameter
+        ssm.StringParameter(
+            self,
+            f"{parameter_name.replace('/', '_')}_Parameter",  # Unique ID
+            parameter_name=full_parameter_name,
+            string_value=value,
+        )
 
-            # Check if the existing value matches the desired value
-            if existing_value != value:
-                _do_log(
-                    obj=(
-                        f"SSM parameter '{full_parameter_name}' exists with"
-                        f" a different value: {existing_value}.\n"
-                        f"Expected: {value}. Please update it manually if needed."
-                    )
-                )
-        except Exception as e:
-            _do_log(
-                obj=(
-                    f"SSM parameter '{full_parameter_name}' not found."
-                    f"\nCreating it. Error: {e}"
-                )
-            )
-            # Create the parameter if it doesn't exist
-            ssm.StringParameter(
-                self,
-                f"{parameter_name.replace('/', '_')}_Parameter",
-                parameter_name=full_parameter_name,
-                string_value=value,
-            )
+        _do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
 
     @staticmethod
     def get_or_create_sns_topic_arn(topic_name: str, automatic_creation=True) -> str:
@@ -192,3 +167,15 @@ class AppCommonStack(Stack):
         If the topic does not exist, it is created automatically.
         """
         return self.get_or_create_sns_topic_arn(self._get_error_topic_name())
+
+    def _get_sns_topic_from_arn(self, topic_arn: str) -> sns.Topic:
+        """
+        Retrieves an SNS topic object based on its ARN.
+        """
+        return sns.Topic.from_topic_arn(self, "SNSTopic", topic_arn)
+
+    def _get_error_topic(self) -> sns.Topic:
+        """
+        Retrieves the SNS topic to which error notifications are sent.
+        """
+        return self._get_sns_topic_from_arn(self._get_error_topic_arn())
