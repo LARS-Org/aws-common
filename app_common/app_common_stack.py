@@ -98,14 +98,14 @@ class AppCommonStack(Stack):
         _do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
 
     @staticmethod
-    def _get_or_create_sns_topic_arn(topic_name: str, automatic_creation=True) -> str:
+    def _get_or_create_sns_topic_arn(topic_name: str, ensure_creation=True) -> str:
         """
         Retrieves the ARN of an SNS topic by name, creating the topic
         if it does not exist.
         Automatically escalates permissions if required.
 
         :param topic_name: The name of the SNS topic.
-        :param automatic_creation: If False, raises an error if the topic doesn't exist.
+        :param ensure_creation: If False, raises an error if the topic doesn't exist.
         :return: The ARN of the SNS topic.
         """
 
@@ -120,7 +120,7 @@ class AppCommonStack(Stack):
         topic_arn = f"arn:aws:sns:{region}:{account_id}:{topic_name}"
 
         # Try to create the topic directly (idempotent operation)
-        if automatic_creation:
+        if ensure_creation:
             _do_log(obj=f"Ensuring SNS topic '{topic_name}' exists...")
             create_response = sns_client.create_topic(Name=topic_name)
             _do_log(
@@ -149,7 +149,7 @@ class AppCommonStack(Stack):
         :raises ValueError: If the topic is not found.
         """
         return AppCommonStack._get_or_create_sns_topic_arn(
-            topic_name, automatic_creation=False
+            topic_name, ensure_creation=False
         )
 
     def _get_or_create_sns_topic(self, topic_name: str) -> sns.Topic:
@@ -157,7 +157,9 @@ class AppCommonStack(Stack):
         Retrieves an SNS topic by name, creating the topic if it does not exist.
         """
         return sns.Topic.from_topic_arn(
-            self, topic_name, self._get_or_create_sns_topic_arn(topic_name)
+            self,
+            f"{topic_name}[ID]",  # Unique ID for the topic
+            self._get_or_create_sns_topic_arn(topic_name),
         )
 
     def _get_or_create_sns_topic_with_sms_param(
