@@ -5,6 +5,7 @@ This module contains the base class for Lambda handlers.
 import base64
 import json
 import os
+import traceback
 from abc import ABC, abstractmethod
 
 try:
@@ -48,6 +49,74 @@ class BaseLambdaHandler(ABC):
         self.context = None
         self.body = None
         self.headers = None
+        self.job_return = None
+
+    @staticmethod
+    def extract_error_details(exception: Exception) -> dict:
+        """
+        Extracts error details from the exception.
+        """
+        # Extract the stack trace
+        stack_trace = "".join(traceback.format_tb(exception.__traceback__))
+        # Extract the error message
+        error_message = str(exception)
+        # Extract the error type
+        error_type = exception.__class__.__name__
+
+        # Traverse to the deepest frame in the traceback
+        tb = exception.__traceback__
+        deepest_frame = None
+        while tb:
+            deepest_frame = tb.tb_frame
+            tb = tb.tb_next
+
+        if deepest_frame:
+            # Extract details from the deepest frame
+            component = deepest_frame.f_globals.get("__name__", "unknown")
+            location = deepest_frame.f_code.co_name
+            line_number = deepest_frame.f_lineno
+        else:
+            # Fallback if no frame is found
+            component = "unknown"
+            location = "unknown"
+            line_number = "unknown"
+
+        return {
+            "stack_trace": stack_trace,
+            "error_message": error_message,
+            "error_type": error_type,
+            "component": component,
+            "location": location,
+            "line_number": line_number,
+        }
+
+    def _get_error_topic_arn(self) -> str:
+        """
+        Retrieves the ARN of the SNS topic to which error notifications
+        are sent from the environment variables.
+        """
+        return self.get_env_var("ERROR_TOPIC_ARN")
+
+    def _send_error_notification(self, e: Exception):
+        """
+        Sends an error notification to the error SNS topic.
+        """
+        error_topic_arn = self._get_error_topic_arn()
+
+        # Extract error details
+        error_details = self.extract_error_details(e)
+        # Add the original payload and other details as metadata
+        error_details["metadata"] = self.job_return
+        # Add app_id and user_id to the error details
+        error_details["app_id"] = "unknown"
+        error_details["user_id"] = "unknown"
+        if self.body:
+            error_details["app_id"] = self.body.get("app_id", "unknown")
+            error_details["user_id"] = self.body.get("cbf_user_uuid", "unknown")
+
+        # Publish the error details to the error SNS topic
+        if error_topic_arn:
+            self.publish_to_sns(error_topic_arn, error_details)
 
     def _on_error(self, e: Exception):
         """
@@ -55,10 +124,12 @@ class BaseLambdaHandler(ABC):
         parameter ``e`` is usually an exception instance with information on
         what caused the error.
         """
-        # For now, just print the exception. This could be extended
-        # to sending an email and logging to an external system.
-        error_message = f"BaseLambdaHandler::OnError():: Error occurred:\n{e}"
-        self.do_log(error_message)
+        # Print the exception.
+        this_class_name = self.__class__.__name__
+        error_title = f"{this_class_name}::OnError():: Error occurred"
+        self.do_log(error_title, str(e))
+        # Send an error notification
+        self._send_error_notification(e)
 
     def _security_check(self) -> bool:
         """
@@ -252,7 +323,7 @@ class BaseLambdaHandler(ABC):
         ``account_execution_costs()`` even when an invocation to the previously
         mentioned methods fails.
         """
-        job_return = None
+        self.job_return = None
         # this method is called by the __call__ method
         try:
             if not self._security_check():
@@ -261,7 +332,7 @@ class BaseLambdaHandler(ABC):
             # else: it is ok to proceed
             self._before_handle()
             self.do_log("** before_handle() is done.")
-            job_return = None
+            self.job_return = None
 
             # Check if there is an "error" key on the body dict.
             # Observe that, in some cases, the self.body can be None
@@ -270,19 +341,19 @@ class BaseLambdaHandler(ABC):
                 # just forward the error message to be handled
                 # by the next lambda function
                 self.do_log("Error found in the input message.")
-                job_return = self._handle_error_job()
+                self.job_return = self._handle_error_job()
                 self.do_log("** handle_error_job() is done.")
             else:
                 # the _handle event is called only when
                 # there are no errors on self.body
-                job_return = self._handle()
+                self.job_return = self._handle()
                 self.do_log("** handle() is done.")
             self._after_handle()
             self.do_log("** after_handle() is done.")
         except Exception as e:
             # an exception occurred during the processing of the lambda
             # set the job_return to the error message
-            job_return = {
+            self.job_return = {
                 "error": str(e),
                 "class_name": self.__class__.__name__,
                 "payload": self.body,
@@ -303,10 +374,10 @@ class BaseLambdaHandler(ABC):
             # call the on_error method
             self._on_error(e)
 
-        self._call_listeners(job_return)
+        self._call_listeners(self.job_return)
 
         self._account_execution_costs()
-        return job_return
+        return self.job_return
 
     def _account_execution_costs(self):
         """
@@ -315,7 +386,6 @@ class BaseLambdaHandler(ABC):
         at the end of the lambda execution. The default implementation does
         nothing, and is meant to be overridden by subclasses.
         """
-
         return  # do nothing while this feature is not implemented
 
     @staticmethod

@@ -82,7 +82,7 @@ class TestBaseLambdaHandler:
 
         # Check that the error message is printed
         mock_do_log.assert_any_call(
-            f"BaseLambdaHandler::OnError():: Error occurred:\n{error_message}",
+            "TestLambdaHandler::OnError():: Error occurred", "Test Exception"
         )
 
     def test_handle(self):
