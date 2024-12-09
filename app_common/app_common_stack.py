@@ -189,14 +189,10 @@ class AppCommonStack(Stack):
         """
         return self._get_or_create_sns_topic_arn(self._get_error_topic_name())
 
-    def _get_sns_topic_from_arn(self, topic_arn: str) -> sns.Topic:
-        """
-        Retrieves an SNS topic object based on its ARN.
-        """
-        return sns.Topic.from_topic_arn(self, "SNSTopic", topic_arn)
-
     def _get_error_topic(self) -> sns.Topic:
         """
         Retrieves the SNS topic to which error notifications are sent.
         """
-        return self._get_sns_topic_from_arn(self._get_error_topic_arn())
+        return self._get_or_create_sns_topic_with_sms_param(
+            self._get_error_topic_name()
+        )
