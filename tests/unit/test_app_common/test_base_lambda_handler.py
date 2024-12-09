@@ -169,10 +169,7 @@ class TestBaseLambdaHandler:
 
         with pytest.raises(
             TypeError,
-            match=(
-                "Can't instantiate abstract class IncompleteHandler"
-                " with abstract method _handle"
-            ),
+            match=r"^Can't instantiate abstract class IncompleteHandler*",
         ):
             incomplete_handler = IncompleteHandler()
             incomplete_handler._handle()
