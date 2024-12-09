@@ -158,7 +158,7 @@ class AppCommonStack(Stack):
         """
         return sns.Topic.from_topic_arn(
             self,
-            f"{topic_name}[ID]",  # Unique ID for the topic
+            f"{self.stack_name}-{topic_name}",  # Unique ID for the topic
             self._get_or_create_sns_topic_arn(topic_name),
         )
 
