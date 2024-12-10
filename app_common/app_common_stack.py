@@ -196,3 +196,28 @@ class AppCommonStack(Stack):
         return self._get_or_create_sns_topic_with_sms_param(
             self._get_error_topic_name()
         )
+
+    def _grant_ssm_parameter_access(
+        self, lambda_function: _lambda.Function, param_full_path: str
+    ):
+        """
+        Grants permission to a Lambda function to read an SSM parameter.
+
+        :param lambda_function: The Lambda function to grant access.
+        :param parameter_full_path: The full path of the SSM parameter.
+        """
+        if param_full_path.startswith("/"):
+            # Remove the leading "/" if present
+            param_full_path = param_full_path[1:]
+
+        lambda_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter"],
+                resources=[
+                    (
+                        f"arn:aws:ssm:{self.region}:{self.account}"
+                        ":parameter/{param_full_path}"
+                    )
+                ],
+            )
+        )
