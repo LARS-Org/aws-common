@@ -1,3 +1,3 @@
 # Keep this file in sync with the requirements in pipenv configuration.
 # It is necessary for projects that use pip-compile to pin the dependencies
-resend==2.1.0
+# to the versions specified in this file.
