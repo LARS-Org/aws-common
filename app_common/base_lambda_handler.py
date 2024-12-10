@@ -664,3 +664,10 @@ class BaseLambdaHandler(ABC):
         Uses lru_cache to cache the client instance, avoiding multiple connections.
         """
         return boto3.client("ssm")
+
+    @staticmethod
+    def json_dumps_with_decimals(data, indent=4) -> str:
+        """
+        Utility method to serialize data to JSON, including Decimal values.
+        """
+        return json.dumps(data, indent=indent, cls=app_utils.DecimalEncoder)
