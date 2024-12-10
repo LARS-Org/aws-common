@@ -7,6 +7,7 @@ import json
 import os
 import traceback
 from abc import ABC, abstractmethod
+from functools import lru_cache
 
 try:
     import boto3
@@ -594,3 +595,70 @@ class BaseLambdaHandler(ABC):
         variable is not set.
         """
         return os.environ.get(name, default_value)
+
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def get_ssm_parameter_cached(
+        parameter_name: str, with_decryption: bool = False
+    ) -> str:
+        """
+        Retrieves the value of an SSM parameter with caching using lru_cache.
+
+        :param parameter_name: The name of the SSM parameter.
+        :param with_decryption: Whether to decrypt the parameter if it's encrypted.
+        :return: The value of the SSM parameter.
+        :raises Exception: If the parameter cannot be retrieved.
+        """
+        try:
+            # Fetch the parameter from SSM
+            ssm_client = BaseLambdaHandler._get_ssm_client()
+            response = ssm_client.get_parameter(
+                Name=parameter_name,
+                WithDecryption=with_decryption,
+            )
+            return response["Parameter"]["Value"]
+        except Exception as e:
+            print(f"Error retrieving SSM parameter '{parameter_name}': {e}")
+            raise ValueError(f"Failed to retrieve parameter: {parameter_name}") from e
+
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def _get_ses_client():
+        """
+        Retrieves the SES client.
+        Uses lru_cache to cache the client instance, avoiding multiple connections.
+        """
+        return boto3.client("ses")
+
+    def _send_email_notification(
+        self, from_email: str, to_email: str, subject: str, body: str
+    ):
+        """
+        Sends an email notification using Amazon SES.
+        """
+        # Retrieve the SES client
+        ses_client = self._get_ses_client()
+
+        self.do_log(f"Sending email From: {from_email}, To: {to_email}")
+
+        # Send the email
+        response = ses_client.send_email(
+            Source=from_email,
+            Destination={"ToAddresses": [to_email]},
+            Message={
+                "Subject": {"Data": subject},
+                "Body": {"Text": {"Data": body}},
+            },
+        )
+
+        # Log the response
+        self.do_log(f"Email sent. Message ID: {response['MessageId']}")
+
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def _get_ssm_client():
+        """
+        Retrieves the SSM client.
+        Uses lru_cache to cache the client instance, avoiding multiple connections.
+        """
+        return boto3.client("ssm")
