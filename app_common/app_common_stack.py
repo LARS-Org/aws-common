@@ -7,7 +7,7 @@ This can be used as a base class for other utility features to be added to a sta
 
 import boto3
 import jsii
-from aws_cdk import Aspects, IAspect, Stack
+from aws_cdk import Aspects, Duration, IAspect, Stack
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_sns as sns
@@ -240,4 +240,27 @@ class AppCommonStack(Stack):
                 actions=["ses:SendEmail"],
                 resources=resources,
             )
+        )
+
+    def _create_lambda(
+        self,
+        name: str,
+        handler: str,
+        environment: dict,
+        duration_seconds: int = 30,
+        from_asset: str = "lambdas",
+        runtime=_lambda.Runtime.PYTHON_3_11,
+    ) -> _lambda.Function:
+        """
+        Utility method to create a Lambda function with the specified configuration.
+        """
+        return _lambda.Function(
+            self,
+            name,
+            function_name=f"{self.stack_name}-{name}",
+            runtime=runtime,
+            handler=handler,
+            code=_lambda.Code.from_asset(from_asset),
+            environment=environment,
+            timeout=Duration.seconds(duration_seconds),
         )
