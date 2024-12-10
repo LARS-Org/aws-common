@@ -221,3 +221,23 @@ class AppCommonStack(Stack):
                 ],
             )
         )
+
+    def _grant_send_email_permissions(
+        self, lambda_function: _lambda.Function, resources=None
+    ):
+        """
+        Grants permission to a Lambda function to send emails using Amazon SES.
+
+        :param lambda_function: The Lambda function to grant access.
+        """
+        if resources is None:
+            # If no resources are provided, grant permission to
+            # send emails to any address
+            resources = ["*"]
+
+        lambda_function.add_to_role_policy(
+            statement=iam.PolicyStatement(
+                actions=["ses:SendEmail"],
+                resources=resources,
+            )
+        )
