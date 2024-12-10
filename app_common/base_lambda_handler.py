@@ -630,7 +630,7 @@ class BaseLambdaHandler(ABC):
         """
         return boto3.client("ses")
 
-    def _send_email_notification(
+    def send_email_notification(
         self, from_email: str, to_email: str, subject: str, body: str
     ):
         """
