@@ -654,6 +654,8 @@ class BaseLambdaHandler(ABC):
         # Log the response
         self.do_log(f"Email sent. Message ID: {response['MessageId']}")
 
+        return response
+
     @staticmethod
     @lru_cache(maxsize=1)
     def _get_ssm_client():
