@@ -210,15 +210,13 @@ class AppCommonStack(Stack):
             # Remove the leading "/" if present
             param_full_path = param_full_path[1:]
 
+        arn = f"arn:aws:ssm:{self.region}:{self.account}"
+        arn += f":parameter/{param_full_path}"
+        # Grant permission to read the SSM parameter
         lambda_function.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["ssm:GetParameter"],
-                resources=[
-                    (
-                        f"arn:aws:ssm:{self.region}:{self.account}"
-                        ":parameter/{param_full_path}"
-                    )
-                ],
+                resources=[arn],
             )
         )
 
