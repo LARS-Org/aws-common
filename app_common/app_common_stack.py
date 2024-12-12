@@ -72,7 +72,7 @@ class AppCommonStack(Stack):
         Aspects.of(self).add(GrantPublishToSnsAspect(self.error_handling_topic_arn))
 
     def _ensure_ssm_parameter(
-        self, parameter_name: str, value: str, custom_path: str = None
+        self, parameter_name: str, value: str, custom_path: str = None, **kwargs
     ) -> None:
         """
         Creates an SSM parameter during the deployment process.
@@ -85,6 +85,14 @@ class AppCommonStack(Stack):
         # Use the custom path or default to the stack name
         custom_path = custom_path or self.stack_name
 
+        if custom_path.startswith("/"):
+            # Remove the leading slash
+            custom_path = custom_path[1:]
+
+        if parameter_name.startswith("/"):
+            # Remove the leading slash
+            parameter_name = parameter_name[1:]
+
         # Construct the full parameter name
         full_parameter_name = f"/{custom_path}/{parameter_name}"
 
@@ -94,6 +102,7 @@ class AppCommonStack(Stack):
             f"{parameter_name.replace('/', '_')}_Parameter",  # Unique ID
             parameter_name=full_parameter_name,
             string_value=value,
+            **kwargs,
         )
 
         self.do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
@@ -251,6 +260,7 @@ class AppCommonStack(Stack):
         duration_seconds: int = 30,
         from_asset: str = "lambdas",
         runtime=_lambda.Runtime.PYTHON_3_11,
+        **kwargs,
     ) -> _lambda.Function:
         """
         Utility method to create a Lambda function with the specified configuration.
@@ -264,6 +274,7 @@ class AppCommonStack(Stack):
             code=_lambda.Code.from_asset(from_asset),
             environment=environment,
             timeout=Duration.seconds(duration_seconds),
+            **kwargs,
         )
 
         self.do_log(f"Created Lambda function {name}")
@@ -285,6 +296,7 @@ class AppCommonStack(Stack):
         sk_name: str = None,
         sk_type: dynamodb.AttributeType = None,
         removal_policy: RemovalPolicy = RemovalPolicy.RETAIN,
+        **kwargs,
     ) -> dynamodb.Table:
         """
         Creates a DynamoDB table with the specified parameters.
@@ -300,6 +312,7 @@ class AppCommonStack(Stack):
             ),
             table_name=table_name,
             removal_policy=removal_policy,
+            **kwargs,
         )
 
         self.do_log(f"Created DynamoDB table {table_name}")
