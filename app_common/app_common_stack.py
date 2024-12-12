@@ -7,7 +7,8 @@ This can be used as a base class for other utility features to be added to a sta
 
 import boto3
 import jsii
-from aws_cdk import Aspects, Duration, IAspect, Stack
+from aws_cdk import Aspects, Duration, IAspect, RemovalPolicy, Stack
+from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_sns as sns
@@ -265,7 +266,7 @@ class AppCommonStack(Stack):
             timeout=Duration.seconds(duration_seconds),
         )
 
-        self.do_log(title="Lambda Function Created", obj=lambda_obj.function_name)
+        self.do_log(f"Created Lambda function {name}")
 
         return lambda_obj
 
@@ -275,3 +276,32 @@ class AppCommonStack(Stack):
         Utility method to log an object.
         """
         _do_log(obj=obj, title=title)
+
+    def _create_dynamodb_table(
+        self,
+        table_name: str,
+        pk_name: str,
+        pk_type: dynamodb.AttributeType,
+        sk_name: str = None,
+        sk_type: dynamodb.AttributeType = None,
+        removal_policy: RemovalPolicy = RemovalPolicy.RETAIN,
+    ) -> dynamodb.Table:
+        """
+        Creates a DynamoDB table with the specified parameters.
+        """
+        new_table = dynamodb.Table(
+            self,
+            table_name,
+            partition_key=dynamodb.Attribute(name=pk_name, type=pk_type),
+            sort_key=(
+                dynamodb.Attribute(name=sk_name, type=sk_type)
+                if sk_name and sk_type
+                else None
+            ),
+            table_name=table_name,
+            removal_policy=removal_policy,
+        )
+
+        self.do_log(f"Created DynamoDB table {table_name}")
+
+        return new_table
