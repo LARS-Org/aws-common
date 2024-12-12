@@ -95,7 +95,7 @@ class AppCommonStack(Stack):
             string_value=value,
         )
 
-        _do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
+        self.do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
 
     @staticmethod
     def _get_or_create_sns_topic_arn(topic_name: str, ensure_creation=True) -> str:
@@ -121,9 +121,9 @@ class AppCommonStack(Stack):
 
         # Try to create the topic directly (idempotent operation)
         if ensure_creation:
-            _do_log(obj=f"Ensuring SNS topic '{topic_name}' exists...")
+            AppCommonStack.do_log(obj=f"Ensuring SNS topic '{topic_name}' exists...")
             create_response = sns_client.create_topic(Name=topic_name)
-            _do_log(
+            AppCommonStack.do_log(
                 obj=(
                     f"Successfully ensured topic '{topic_name}'."
                     f" ARN: {create_response['TopicArn']}"
@@ -132,7 +132,7 @@ class AppCommonStack(Stack):
             return create_response["TopicArn"]
         else:
             # If automatic creation is disabled, assume the topic exists
-            _do_log(
+            AppCommonStack.do_log(
                 obj=(
                     f"Checking if topic '{topic_name}' " "exists without creating it..."
                 )
@@ -246,7 +246,7 @@ class AppCommonStack(Stack):
         self,
         name: str,
         handler: str,
-        environment: dict,
+        environment: dict = None,
         duration_seconds: int = 30,
         from_asset: str = "lambdas",
         runtime=_lambda.Runtime.PYTHON_3_11,
@@ -254,7 +254,7 @@ class AppCommonStack(Stack):
         """
         Utility method to create a Lambda function with the specified configuration.
         """
-        return _lambda.Function(
+        lambda_obj = _lambda.Function(
             self,
             name,
             function_name=f"{self.stack_name}-{name}",
@@ -264,3 +264,14 @@ class AppCommonStack(Stack):
             environment=environment,
             timeout=Duration.seconds(duration_seconds),
         )
+
+        self.do_log(title="Lambda Function Created", obj=lambda_obj.function_name)
+
+        return lambda_obj
+
+    @staticmethod
+    def do_log(obj, title: str = None):
+        """
+        Utility method to log an object.
+        """
+        _do_log(obj=obj, title=title)
