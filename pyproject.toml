@@ -24,7 +24,6 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-resend = "2.4.0"
 
 [tool.poetry.group.dev]
 optional = true
