@@ -653,9 +653,9 @@ class TestHttpRequest:
             urllib3.exceptions.HTTPError("Connection failed")
         )
 
-        result = http_request("GET", "http://example.com")
-        assert "error" in result
-        assert result["error"] == "Connection failed"
+        # assert the error raised
+        with pytest.raises(urllib3.exceptions.HTTPError):
+            http_request("GET", "http://example.com")
 
     @patch("urllib3.PoolManager")
     def test_http_request_empty_response(self, mock_pool_manager):
