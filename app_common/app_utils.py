@@ -387,56 +387,43 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
     :param method: HTTP method (e.g., "GET", "POST").
     :param url: URL to make the request to.
     :param headers: Dictionary of headers to include in the request.
-    :param json_data: JSON payload for the request body. If provided, Content-Type will be set to application/json.
+    :param json_data: JSON payload for the request body.
+        If provided, Content-Type will be set to application/json.
     :param timeout: Timeout value in seconds for the request.
     :return: Dictionary containing:
         - status: HTTP status code (int)
         - headers: Response headers (dict)
-        - body: Response body (parsed JSON if application/json response, string otherwise)
+        - body: Response body (parsed JSON if application/json response,
+                string otherwise)
         - error: Error message if request failed (str)
     :raises: No exceptions are raised, errors are returned in the response dict
-    """
-    """
-    Make an HTTP request using urllib3.
-
-    :param method: HTTP method (e.g., "GET", "POST").
-    :param url: URL to make the request to.
-    :param headers: Dictionary of headers to include in the request.
-    :param json_data: JSON payload for the request body.
-    :param timeout: Timeout value in seconds for the request.
-    :return: Response object with status, headers, and body.
     """
     http = urllib3.PoolManager()
     if json_data is not None:
         headers = headers or {}
-        headers.setdefault('Content-Type', 'application/json')
+        headers.setdefault("Content-Type", "application/json")
     body = json.dumps(json_data) if json_data else None
-    try:
-        response = http.request(
-            method=method,
-            url=url,
-            headers=headers,
-            body=body,
-            timeout=urllib3.Timeout(total=timeout),
-        )
+    response = http.request(
+        method=method,
+        url=url,
+        headers=headers,
+        body=body,
+        timeout=urllib3.Timeout(total=timeout),
+    )
 
-        response_data = response.data.decode("utf-8") if response.data else None
+    response_data = response.data.decode("utf-8") if response.data else None
 
-        if response_data:
-            try:
-                response_data = json.loads(response_data, cls=DecimalEncoder)
-            except json.JSONDecodeError:
-                # pass if the response data is not JSON
-                # this is to handle cases where the response data is not JSON
-                pass
+    if response_data and response.headers.get("content-type", "").startswith(
+        "application/json"
+    ):
+        # if there is some parsing error, raise an exception
+        response_data = json.loads(response_data, cls=DecimalEncoder)
 
-        return {
-            "status": response.status,
-            "headers": dict(response.headers),
-            "body": response_data,
-        }
-    except urllib3.exceptions.HTTPError as e:
-        return {"error": "Request failed", "error_type": type(e).__name__}
+    return {
+        "status": response.status,
+        "headers": dict(response.headers),
+        "body": response_data,
+    }
 
 
 def run_command(command, cwd=None, shell=False):
