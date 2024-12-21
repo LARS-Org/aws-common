@@ -6,8 +6,9 @@ import decimal
 import json
 import subprocess
 import sys
-import urllib3
 from collections import deque
+
+import urllib3
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -382,7 +383,7 @@ def _do_log(
 def http_request(method, url, headers=None, json_data=None, timeout=30):
     """
     Make an HTTP request using urllib3.
-    
+
     :param method: HTTP method (e.g., "GET", "POST").
     :param url: URL to make the request to.
     :param headers: Dictionary of headers to include in the request.
@@ -398,10 +399,10 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
             url=url,
             headers=headers,
             body=body,
-            timeout=urllib3.Timeout(total=timeout)
+            timeout=urllib3.Timeout(total=timeout),
         )
 
-        response_data = response.data.decode('utf-8') if response.data else None
+        response_data = response.data.decode("utf-8") if response.data else None
 
         if response_data:
             try:
@@ -414,7 +415,7 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
         return {
             "status": response.status,
             "headers": dict(response.headers),
-            "body": response_data
+            "body": response_data,
         }
     except urllib3.exceptions.HTTPError as e:
         return {"error": str(e)}

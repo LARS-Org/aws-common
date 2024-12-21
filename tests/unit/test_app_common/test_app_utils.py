@@ -613,7 +613,7 @@ class TestHttpRequest:
         mock_response = MagicMock()
         mock_response.status = 200
         mock_response.headers = {"Content-Type": "application/json"}
-        mock_response.data = b'{}'
+        mock_response.data = b"{}"
         mock_pool_manager.return_value.request.return_value = mock_response
 
         headers = {"Authorization": "Bearer token"}
@@ -637,7 +637,7 @@ class TestHttpRequest:
         mock_response = MagicMock()
         mock_response.status = 200
         mock_response.headers = {"Content-Type": "text/plain"}
-        mock_response.data = b'Hello World'
+        mock_response.data = b"Hello World"
         mock_pool_manager.return_value.request.return_value = mock_response
 
         result = http_request("GET", "http://example.com")
@@ -649,7 +649,9 @@ class TestHttpRequest:
         """
         Test handling of HTTP errors.
         """
-        mock_pool_manager.return_value.request.side_effect = urllib3.exceptions.HTTPError("Connection failed")
+        mock_pool_manager.return_value.request.side_effect = (
+            urllib3.exceptions.HTTPError("Connection failed")
+        )
 
         result = http_request("GET", "http://example.com")
         assert "error" in result
