@@ -600,7 +600,7 @@ class TestHttpRequest:
         call_args = mock_pool_manager.return_value.request.call_args[1]
         assert call_args["method"] == "POST"
         assert call_args["url"] == "http://example.com"
-        assert call_args["headers"] is None
+        assert call_args["headers"] == {"Content-Type": "application/json"}
         assert call_args["body"] == '{"name": "test"}'
         assert isinstance(call_args["timeout"], urllib3.Timeout)
         assert call_args["timeout"].total == 30

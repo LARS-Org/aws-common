@@ -412,11 +412,11 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
 
     response_data = response.data.decode("utf-8") if response.data else None
 
-    if response_data and response.headers.get("content-type", "").startswith(
+    if response_data and response.headers.get("Content-Type", "").startswith(
         "application/json"
     ):
         # if there is some parsing error, raise an exception
-        response_data = json.loads(response_data, cls=DecimalEncoder)
+        response_data = json.loads(response_data)
 
     return {
         "status": response.status,
