@@ -395,8 +395,7 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
         - headers: Response headers (dict)
         - body: Response body (parsed JSON if application/json response,
                 string otherwise)
-        - error: Error message if request failed (str)
-    :raises: No exceptions are raised, errors are returned in the response dict
+    :raises: JSONDecodeError if the response body is not valid JSON.
     """
     http = urllib3.PoolManager()
     if json_data is not None:
