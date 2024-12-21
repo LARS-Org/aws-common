@@ -8,7 +8,9 @@ import subprocess
 import sys
 from collections import deque
 
-import urllib3
+import http.client
+import ssl
+import urllib.parse
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -382,7 +384,7 @@ def _do_log(
 
 def http_request(method, url, headers=None, json_data=None, timeout=30):
     """
-    Make an HTTP request using urllib3.
+    Make an HTTP request using http.client.
 
     :param method: HTTP method (e.g., "GET", "POST").
     :param url: URL to make the request to.
@@ -397,32 +399,44 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
                 string otherwise)
     :raises: JSONDecodeError if the response body is not valid JSON.
     """
-    http = urllib3.PoolManager()
+    parsed_url = urllib.parse.urlparse(url)
+    if parsed_url.scheme == 'https':
+        conn = http.client.HTTPSConnection(
+            parsed_url.netloc,
+            timeout=timeout,
+            context=ssl.create_default_context()
+        )
+    else:
+        conn = http.client.HTTPConnection(parsed_url.netloc, timeout=timeout)
+
+    path = parsed_url.path or '/'
+    if parsed_url.query:
+        path += '?' + parsed_url.query
+
     if json_data is not None:
         headers = headers or {}
         headers.setdefault("Content-Type", "application/json")
-    body = json.dumps(json_data) if json_data else None
-    response = http.request(
-        method=method,
-        url=url,
-        headers=headers,
-        body=body,
-        timeout=urllib3.Timeout(total=timeout),
-    )
+        body = json.dumps(json_data)
+    else:
+        body = None
 
-    response_data = response.data.decode("utf-8") if response.data else None
+    try:
+        conn.request(method, path, body=body, headers=headers or {})
+        response = conn.getresponse()
+        response_data = response.read().decode('utf-8') if response.length else None
 
-    if response_data and response.headers.get("Content-Type", "").startswith(
-        "application/json"
-    ):
-        # if there is some parsing error, raise an exception
-        response_data = json.loads(response_data)
+        if response_data and response.getheader('Content-Type', '').startswith(
+            'application/json'
+        ):
+            response_data = json.loads(response_data)
 
-    return {
-        "status": response.status,
-        "headers": dict(response.headers),
-        "body": response_data,
-    }
+        return {
+            'status': response.status,
+            'headers': dict(response.headers),
+            'body': response_data
+        }
+    finally:
+        conn.close()
 
 
 def run_command(command, cwd=None, shell=False):
