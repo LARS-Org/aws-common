@@ -685,7 +685,7 @@ class TestHttpRequest:
 
         params = {"key1": "value1", "key2": "value2"}
         result = http_request("GET", "http://example.com", params=params)
-        
+
         # Verify the URL was properly constructed with query parameters
         call_args = mock_pool_manager.return_value.request.call_args[1]
         assert call_args["url"] == "http://example.com?key1=value1&key2=value2"
@@ -704,12 +704,7 @@ class TestHttpRequest:
         mock_pool_manager.return_value.request.return_value = mock_response
 
         # Test with some additional urllib3 kwargs
-        result = http_request(
-            "GET", 
-            "http://example.com",
-            retries=3,
-            redirect=False
-        )
+        result = http_request("GET", "http://example.com", retries=3, redirect=False)
 
         # Verify the additional kwargs were passed to urllib3
         call_args = mock_pool_manager.return_value.request.call_args[1]

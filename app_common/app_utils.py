@@ -380,7 +380,9 @@ def _do_log(
     print(line_break_chars.join(output_lines))
 
 
-def http_request(method, url, headers=None, json_data=None, params=None, timeout=30, **kwargs):
+def http_request(
+    method, url, headers=None, json_data=None, params=None, timeout=30, **kwargs
+):
     """
     Make an HTTP request using urllib3.
 
@@ -404,12 +406,13 @@ def http_request(method, url, headers=None, json_data=None, params=None, timeout
     if json_data is not None:
         headers = headers or {}
         headers.setdefault("Content-Type", "application/json")
-    
+
     body = json.dumps(json_data) if json_data else None
 
     # Append query parameters to the URL if provided
     if params:
         from urllib.parse import urlencode
+
         url = f"{url}?{urlencode(params)}"
 
     response = http.request(
@@ -418,12 +421,14 @@ def http_request(method, url, headers=None, json_data=None, params=None, timeout
         headers=headers,
         body=body,
         timeout=urllib3.Timeout(total=timeout),
-        **kwargs
+        **kwargs,
     )
 
     response_data = response.data.decode("utf-8") if response.data else None
 
-    if response_data and response.headers.get("Content-Type", "").startswith("application/json"):
+    if response_data and response.headers.get("Content-Type", "").startswith(
+        "application/json"
+    ):
         # If there is some parsing error, raise an exception
         response_data = json.loads(response_data)
 
