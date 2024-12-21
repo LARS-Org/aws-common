@@ -418,7 +418,7 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
             "body": response_data,
         }
     except urllib3.exceptions.HTTPError as e:
-        return {"error": str(e)}
+        return {"error": "Request failed", "error_type": type(e).__name__}
 
 
 def run_command(command, cwd=None, shell=False):
