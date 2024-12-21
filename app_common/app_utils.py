@@ -406,7 +406,7 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
 
         if response_data:
             try:
-                response_data = json.loads(response_data)
+                response_data = json.loads(response_data, cls=DecimalEncoder)
             except json.JSONDecodeError:
                 # pass if the response data is not JSON
                 # this is to handle cases where the response data is not JSON
