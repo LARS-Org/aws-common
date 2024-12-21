@@ -1,3 +1,5 @@
 # Keep this file in sync with the requirements in pipenv configuration.
 # It is necessary for projects that use pip-compile to pin the dependencies
 # to the versions specified in this file.
+
+urllib3>=2.0.0

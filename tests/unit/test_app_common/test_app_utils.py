@@ -1,15 +1,17 @@
 import decimal
 import json
 import sys
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+import urllib3
 
 from app_common.app_utils import (
     DecimalEncoder,
     _do_log,
     get_first_element,
     get_first_non_none,
+    http_request,
     is_numeric,
     run_command,
     str_is_none_or_empty,
@@ -559,6 +561,114 @@ class TestDoLog:
             "--[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
             "----key_5_1=value_5_1 key_5_2=52"
         )
+
+
+class TestHttpRequest:
+    @patch("urllib3.PoolManager")
+    def test_http_request_get_success(self, mock_pool_manager):
+        """
+        Test successful GET request with JSON response.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.data = b'{"key": "value"}'
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        result = http_request("GET", "http://example.com")
+        assert result["status"] == 200
+        assert result["headers"] == {"Content-Type": "application/json"}
+        assert result["body"] == {"key": "value"}
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_post_with_json(self, mock_pool_manager):
+        """
+        Test POST request with JSON payload.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 201
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.data = b'{"id": 123}'
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        json_data = {"name": "test"}
+        result = http_request("POST", "http://example.com", json_data=json_data)
+        assert result["status"] == 201
+        assert result["body"] == {"id": 123}
+
+        # Verify JSON payload was properly sent
+        call_args = mock_pool_manager.return_value.request.call_args[1]
+        assert call_args["method"] == "POST"
+        assert call_args["url"] == "http://example.com"
+        assert call_args["headers"] is None
+        assert call_args["body"] == '{"name": "test"}'
+        assert isinstance(call_args["timeout"], urllib3.Timeout)
+        assert call_args["timeout"].total == 30
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_with_headers(self, mock_pool_manager):
+        """
+        Test request with custom headers.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.data = b'{}'
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        headers = {"Authorization": "Bearer token"}
+        result = http_request("GET", "http://example.com", headers=headers)
+        assert result["status"] == 200
+
+        # Verify headers were properly sent
+        call_args = mock_pool_manager.return_value.request.call_args[1]
+        assert call_args["method"] == "GET"
+        assert call_args["url"] == "http://example.com"
+        assert call_args["headers"] == headers
+        assert call_args["body"] is None
+        assert isinstance(call_args["timeout"], urllib3.Timeout)
+        assert call_args["timeout"].total == 30
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_non_json_response(self, mock_pool_manager):
+        """
+        Test handling of non-JSON response.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "text/plain"}
+        mock_response.data = b'Hello World'
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        result = http_request("GET", "http://example.com")
+        assert result["status"] == 200
+        assert result["body"] == "Hello World"
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_error(self, mock_pool_manager):
+        """
+        Test handling of HTTP errors.
+        """
+        mock_pool_manager.return_value.request.side_effect = urllib3.exceptions.HTTPError("Connection failed")
+
+        result = http_request("GET", "http://example.com")
+        assert "error" in result
+        assert result["error"] == "Connection failed"
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_empty_response(self, mock_pool_manager):
+        """
+        Test handling of empty response.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 204
+        mock_response.headers = {}
+        mock_response.data = None
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        result = http_request("DELETE", "http://example.com")
+        assert result["status"] == 204
+        assert result["body"] is None
 
 
 class TestRunCommand:
