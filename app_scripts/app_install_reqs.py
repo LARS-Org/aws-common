@@ -74,10 +74,20 @@ def _install_from_aws_common(do_log_func, run_cmd_func, target=None):
 
 def _install_requirements_recursively(do_log_func, run_cmd_func):
     """
-    Recursively traverse the project directory and install all requirements.txt files.
+    Install requirements from the client project's specialized requirements.txt first,
+    then recursively traverse the project directory and install all requirements.txt files.
     """
     pip_requirements_file_list = ["requirements.txt", "requirements-dev.txt"]
+    
+    # First, check for specialized requirements in the client project root
+    client_root = os.path.abspath(os.getcwd())
+    for req_file in pip_requirements_file_list:
+        client_req_path = os.path.join(client_root, req_file)
+        if os.path.exists(client_req_path):
+            do_log_func(f"*** Installing client project's {req_file} (will be quiet)...")
+            run_cmd_func(["pip", "install", "-r", client_req_path, "--quiet"])
 
+    # Then proceed with recursive installation
     for root, dirs, files in os.walk("."):
         # Skip certain directories
         if any(
