@@ -392,6 +392,9 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
     :return: Response object with status, headers, and body.
     """
     http = urllib3.PoolManager()
+    if json_data is not None:
+        headers = headers or {}
+        headers.setdefault('Content-Type', 'application/json')
     body = json.dumps(json_data) if json_data else None
     try:
         response = http.request(
