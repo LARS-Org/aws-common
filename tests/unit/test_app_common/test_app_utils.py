@@ -672,6 +672,52 @@ class TestHttpRequest:
         assert result["status"] == 204
         assert result["body"] is None
 
+    @patch("urllib3.PoolManager")
+    def test_http_request_with_query_params(self, mock_pool_manager):
+        """
+        Test request with query parameters.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.data = b'{"result": "success"}'
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        params = {"key1": "value1", "key2": "value2"}
+        result = http_request("GET", "http://example.com", params=params)
+        
+        # Verify the URL was properly constructed with query parameters
+        call_args = mock_pool_manager.return_value.request.call_args[1]
+        assert call_args["url"] == "http://example.com?key1=value1&key2=value2"
+        assert result["status"] == 200
+        assert result["body"] == {"result": "success"}
+
+    @patch("urllib3.PoolManager")
+    def test_http_request_with_additional_kwargs(self, mock_pool_manager):
+        """
+        Test request with additional urllib3 kwargs.
+        """
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "text/plain"}
+        mock_response.data = b"success"
+        mock_pool_manager.return_value.request.return_value = mock_response
+
+        # Test with some additional urllib3 kwargs
+        result = http_request(
+            "GET", 
+            "http://example.com",
+            retries=3,
+            redirect=False
+        )
+
+        # Verify the additional kwargs were passed to urllib3
+        call_args = mock_pool_manager.return_value.request.call_args[1]
+        assert call_args["retries"] == 3
+        assert call_args["redirect"] is False
+        assert result["status"] == 200
+        assert result["body"] == "success"
+
 
 class TestRunCommand:
     @patch("subprocess.run")
