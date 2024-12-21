@@ -387,6 +387,21 @@ def http_request(method, url, headers=None, json_data=None, timeout=30):
     :param method: HTTP method (e.g., "GET", "POST").
     :param url: URL to make the request to.
     :param headers: Dictionary of headers to include in the request.
+    :param json_data: JSON payload for the request body. If provided, Content-Type will be set to application/json.
+    :param timeout: Timeout value in seconds for the request.
+    :return: Dictionary containing:
+        - status: HTTP status code (int)
+        - headers: Response headers (dict)
+        - body: Response body (parsed JSON if application/json response, string otherwise)
+        - error: Error message if request failed (str)
+    :raises: No exceptions are raised, errors are returned in the response dict
+    """
+    """
+    Make an HTTP request using urllib3.
+
+    :param method: HTTP method (e.g., "GET", "POST").
+    :param url: URL to make the request to.
+    :param headers: Dictionary of headers to include in the request.
     :param json_data: JSON payload for the request body.
     :param timeout: Timeout value in seconds for the request.
     :return: Response object with status, headers, and body.
