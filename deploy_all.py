@@ -87,7 +87,7 @@ def deploy_module(module_path):
     if sys.platform == "win32":
         command = f"{activate_script}"
     else:
-        command = f"source {activate_script}"
+        command = f"bash -c source {activate_script}"
 
     # Update the permissions of the activate script to allow
     # execution by a external process
