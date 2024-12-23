@@ -106,7 +106,7 @@ def deploy_module(module_path):
         return False
 
     # Pull the main branch
-    if not run_command(["git", "pull", "origin", "main"], cwd=module_path):
+    if not run_command(["git", "pull"], cwd=module_path):
         print(f"Failed to pull main branch in {module_path}, skipping...")
         return False
 
