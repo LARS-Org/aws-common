@@ -11,6 +11,44 @@ import shutil
 import subprocess
 import sys
 import time
+from functools import wraps
+
+
+def retry_on_failure(max_attempts=3, delay=5):
+    """
+    Decorator that retries a function on failure.
+
+    Args:
+        max_attempts: Maximum number of attempts to retry
+        delay: Delay in seconds between retries
+
+    Returns:
+        Decorator function
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < max_attempts:
+                try:
+                    result = func(*args, **kwargs)
+                    if result:  # If function returns True, it succeeded
+                        return result
+                    raise Exception("Function returned False")
+                except Exception as e:
+                    attempts += 1
+                    if attempts == max_attempts:
+                        print(f"Failed after {max_attempts} attempts")
+                        return False
+                    print(f"Attempt {attempts} failed: {str(e)}")
+                    print(f"Retrying in {delay} seconds...")
+                    time.sleep(delay)
+            return False
+
+        return wrapper
+
+    return decorator
 
 
 def run_command(command, cwd=None, shell=False, env=None):
@@ -44,6 +82,7 @@ def run_command(command, cwd=None, shell=False, env=None):
         return False
 
 
+@retry_on_failure(max_attempts=3, delay=5)
 def deploy_module(module_path):
     """
     Deploy a single module by activating its venv and running app_setup.py deploy.
@@ -162,8 +201,13 @@ def main():
         print(new_line_str)
         print(f"DEPLOYING STACK IN: {module_path}")
         print(new_line_str)
-        if deploy_module(module_path):
-            success_count += 1
+        try:
+            if deploy_module(module_path):
+                success_count += 1
+        except Exception as e:
+            print(f"Failed to deploy {module_path}: {e}")
+            # skip to the next module
+            continue
 
     # Print summary
     print(
