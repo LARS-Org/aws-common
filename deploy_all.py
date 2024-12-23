@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script to deploy all project modules in immediate subfolders.
 
