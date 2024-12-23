@@ -138,6 +138,7 @@ def main():
     # Deploy each module
     success_count = 0
     new_line_str = "-" * 80
+    print()  # a blank line before the first module
     for subdir in subdirs:
         module_path = os.path.join(base_dir, subdir)
         print(new_line_str)
