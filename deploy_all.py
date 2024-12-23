@@ -137,11 +137,11 @@ def main():
 
     # Deploy each module
     success_count = 0
-    new_line_str = "\n" + "-" * 80
+    new_line_str = "-" * 80
     for subdir in subdirs:
         module_path = os.path.join(base_dir, subdir)
         print(new_line_str)
-        print(f"Deploying module in {module_path}...")
+        print(f"DEPLOYING STACK IN: {module_path}")
         print(new_line_str)
         if deploy_module(module_path):
             success_count += 1
