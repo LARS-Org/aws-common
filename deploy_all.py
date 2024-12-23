@@ -8,6 +8,7 @@ For each immediate subfolder:
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -55,17 +56,22 @@ def deploy_module(module_path):
     """
     print(f"\nDeploying module in {module_path}...")
 
-    # Check if .venv exists
-    venv_path = os.path.join(module_path, ".venv")
-    if not os.path.exists(venv_path):
-        print(f"No .venv found in {module_path}, skipping...")
-        return False
-
     # Check if app_setup.py exists
     setup_script = os.path.join(module_path, "app_setup.py")
     if not os.path.exists(setup_script):
         print(f"No app_setup.py found in {module_path}, skipping...")
         return False
+
+    # Recreate the Python virtual environment using the app_setup.py script
+    command = " python3.11 app_setup.py setup"
+    if not run_command(command, cwd=module_path, shell=True):
+        print(f"Failed to recreate virtual environment in {module_path}, skipping...")
+        return False
+
+    print(f"Recreated virtual environment in {module_path}")
+
+    # the .venv directory is created by the app_setup.py script
+    venv_path = os.path.join(module_path, ".venv")
 
     # Get the activate script path
     if sys.platform == "win32":
@@ -73,17 +79,31 @@ def deploy_module(module_path):
     else:
         activate_script = os.path.join(venv_path, "bin", "activate")
 
-    if not os.path.exists(activate_script):
-        print(f"No activation script found at {activate_script}, skipping...")
-        return False
+    # if not os.path.exists(activate_script):
+    #     print(f"No activation script found at {activate_script}, skipping...")
+    #     return False
 
     # Create command that sources venv and runs deploy
     if sys.platform == "win32":
-        command = f'"{activate_script}" && python app_setup.py deploy'
+        command = f"{activate_script}"
     else:
-        command = f'source "{activate_script}" && python app_setup.py deploy'
+        command = f"source {activate_script}"
 
-    # Run the deployment command
+    # Update the permissions of the activate script to allow
+    # execution by a external process
+    os.chmod(activate_script, 0o755)
+
+    print(command)
+
+    # Run the environment activation command
+    if not run_command(command, cwd=module_path, shell=True):
+        print(f"Failed to activate virtual environment in {module_path}, skipping...")
+        return False
+
+    print(f"Activated virtual environment in {module_path}")
+
+    # Run the deploy command
+    command = "python app_setup.py deploy"
     return run_command(command, cwd=module_path, shell=True)
 
 
@@ -96,6 +116,11 @@ def main():
         print("AWS SSO login failed, aborting deployment")
         sys.exit(1)
 
+    # Check if there is a global python3.11 installation available
+    if not shutil.which("python3.11"):
+        print("Python 3.11 not found, skipping...")
+        return False
+
     # Get the base directory
     base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -105,16 +130,19 @@ def main():
     subdirs = [
         d
         for d in os.listdir(base_dir)
-        if os.path.isdir(os.path.join(base_dir, d)) and not d.startswith(".")
+        if os.path.isdir(os.path.join(base_dir, d))
+        and not d.startswith(".")
+        and d not in ["aws-common"]
     ]
 
     if not subdirs:
         print("No subdirectories found to deploy")
         return
 
-    print(subdirs)
-
-    sys.exit(1)
+    print(f"Found {len(subdirs)} subdirectories to deploy")
+    print("\nSubdirectories:")
+    for subdir in subdirs:
+        print(f"  {subdir}")
 
     # Deploy each module
     success_count = 0
