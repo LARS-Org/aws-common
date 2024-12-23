@@ -32,10 +32,7 @@ def retry_on_failure(max_attempts=3, delay=5):
             attempts = 0
             while attempts < max_attempts:
                 try:
-                    result = func(*args, **kwargs)
-                    if result:  # If function returns True, it succeeded
-                        return result
-                    raise Exception("Function returned False")
+                    return func(*args, **kwargs)
                 except Exception as e:
                     attempts += 1
                     if attempts == max_attempts:
@@ -86,7 +83,8 @@ def run_command(command, cwd=None, shell=False, env=None):
 def deploy_module(module_path):
     """
     Deploy a single module by activating its venv and running app_setup.py deploy.
-    Before deployment, updates the git repository by fetching and pulling the main branch.
+    Before deployment, updates the git repository by fetching and pulling the
+    main branch.
 
     Args:
         module_path: Path to the module directory
@@ -96,7 +94,12 @@ def deploy_module(module_path):
     """
     # First update the git repository
     print(f"Updating git repository in {module_path}...")
-    
+
+    # Checkout the main branch
+    if not run_command(["git", "checkout", "main"], cwd=module_path):
+        print(f"Failed to checkout main branch in {module_path}, skipping...")
+        return False
+
     # Fetch all remote branches
     if not run_command(["git", "fetch"], cwd=module_path):
         print(f"Failed to fetch git repository in {module_path}, skipping...")
