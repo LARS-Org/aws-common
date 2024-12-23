@@ -99,11 +99,11 @@ def deploy_module(module_path):
 
 
 def main():
-    """Main function to deploy all modules."""
+    """Main function to deploy all stacks."""
     # control the execution time
     start_time = time.time()
 
-    print("Starting deployment of all modules...")
+    print("Starting deployment of all stacks...")
 
     # First ensure AWS SSO login is done
     if not run_command("aws sso login", shell=True):
@@ -130,11 +130,10 @@ def main():
     ]
 
     if not subdirs:
-        print("No subdirectories found to deploy")
+        print("No projects found to deploy")
         return
 
-    print(f"Found {len(subdirs)} subdirectories to deploy")
-    print("\nSubdirectories:")
+    print(f"Found {len(subdirs)} stacks to deploy:")
     for subdir in subdirs:
         print(f"  {subdir}")
 
@@ -153,7 +152,7 @@ def main():
     # Print summary
     print(
         f"\nDeployment complete: {success_count}/{len(subdirs)}"
-        " modules deployed successfully"
+        " stacks deployed successfully"
     )
 
     # Print execution time
