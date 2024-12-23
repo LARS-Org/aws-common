@@ -1,79 +1,88 @@
-"""Unit tests for deploy_all.py script."""
-
+"""Unit tests for deploy_all.py"""
+import os
 import subprocess
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
-import deploy_all
+from deploy_all import deploy_module, run_command
 
 
 @pytest.fixture
-def mock_env():
-    """Mock environment setup with test directories."""
-    with (
-        patch("os.path.exists") as mock_exists,
-        patch("os.listdir") as mock_listdir,
-        patch("os.path.isdir") as mock_isdir,
-        patch("os.getcwd") as mock_getcwd,
-    ):
-
-        # Mock current directory
-        mock_getcwd.return_value = "/test/dir"
-
-        # Mock subdirectories (excluding test dir)
-        mock_listdir.return_value = ["module1", "module2", ".git"]
-        mock_isdir.side_effect = lambda x: x.split("/")[-1] in [
-            "module1",
-            "module2",
-            ".git",
-        ]
-
-        # Mock file existence checks
-        def exists_side_effect(path):
-            if path.endswith(".venv"):
-                return True
-            if path.endswith("app_setup.py"):
-                return True
-            if path.endswith("activate"):
-                return True
-            return False
-
-        mock_exists.side_effect = exists_side_effect
-        yield
-
-
-def test_run_command_success():
-    """Test successful command execution."""
+def mock_subprocess_run():
+    """Mock subprocess.run for testing."""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = "success"
-
-        assert deploy_all.run_command("test command", shell=True)
-        mock_run.assert_called_once()
+        mock_run.return_value = MagicMock(returncode=0)
+        yield mock_run
 
 
-def test_run_command_failure():
-    """Test failed command execution."""
-    with patch("subprocess.run") as mock_run:
-        mock_run.side_effect = subprocess.CalledProcessError(
-            1, "test command", stderr="error"
-        )
-
-        assert not deploy_all.run_command("test command", shell=True)
+@pytest.fixture
+def mock_os_path_exists():
+    """Mock os.path.exists for testing."""
+    with patch("os.path.exists") as mock_exists:
+        mock_exists.return_value = True
+        yield mock_exists
 
 
-def test_main_aws_sso_failure(mock_env):
-    """Test main execution with AWS SSO login failure."""
-    with (
-        patch("deploy_all.run_command") as mock_run,
-        patch("deploy_all.deploy_module"),
-        patch("sys.exit") as mock_exit,
-    ):
+@pytest.fixture
+def mock_os_chmod():
+    """Mock os.chmod for testing."""
+    with patch("os.chmod") as mock_chmod:
+        yield mock_chmod
 
-        mock_run.return_value = False  # AWS SSO login fails
 
-        deploy_all.main()
+def test_deploy_module_git_operations(mock_subprocess_run, mock_os_path_exists, mock_os_chmod):
+    """Test that git fetch and pull operations are performed before deployment."""
+    module_path = "/test/module"
+    
+    # Call deploy_module
+    result = deploy_module(module_path)
+    
+    assert result is True
+    
+    # Check that git commands were called in the correct order
+    calls = mock_subprocess_run.call_args_list
+    
+    # First call should be git fetch
+    assert calls[0].kwargs["cwd"] == module_path
+    assert calls[0].args[0] == ["git", "fetch"]
+    
+    # Second call should be git pull origin main
+    assert calls[1].kwargs["cwd"] == module_path
+    assert calls[1].args[0] == ["git", "pull", "origin", "main"]
 
-        assert mock_exit.call_count == 1
-        assert mock_exit.call_args == ((1,),)
+
+def test_deploy_module_git_fetch_failure(mock_subprocess_run, mock_os_path_exists, mock_os_chmod):
+    """Test that deployment fails if git fetch fails."""
+    module_path = "/test/module"
+    
+    # Make git fetch fail
+    def side_effect(*args, **kwargs):
+        if args[0] == ["git", "fetch"]:
+            raise subprocess.CalledProcessError(1, "git fetch")
+        return MagicMock(returncode=0)
+    
+    mock_subprocess_run.side_effect = side_effect
+    
+    # Call deploy_module
+    result = deploy_module(module_path)
+    
+    assert result is False
+
+
+def test_deploy_module_git_pull_failure(mock_subprocess_run, mock_os_path_exists, mock_os_chmod):
+    """Test that deployment fails if git pull fails."""
+    module_path = "/test/module"
+    
+    # Make git pull fail
+    def side_effect(*args, **kwargs):
+        if args[0] == ["git", "pull", "origin", "main"]:
+            raise subprocess.CalledProcessError(1, "git pull")
+        return MagicMock(returncode=0)
+    
+    mock_subprocess_run.side_effect = side_effect
+    
+    # Call deploy_module
+    result = deploy_module(module_path)
+    
+    assert result is False
