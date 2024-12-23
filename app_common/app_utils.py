@@ -8,8 +8,6 @@ import subprocess
 import sys
 from collections import deque
 
-import urllib3
-
 
 class DecimalEncoder(json.JSONEncoder):
     """
@@ -401,6 +399,8 @@ def http_request(
                 string otherwise)
     :raises: JSONDecodeError if the response body is not valid JSON.
     """
+    import urllib3
+
     http = urllib3.PoolManager()
 
     if json_data is not None:
