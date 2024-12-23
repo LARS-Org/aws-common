@@ -21,7 +21,7 @@ def run_command(command, cwd=None, shell=False, env=None):
         cwd: Working directory to run the command in
         shell: Whether to run command through shell
         env: Environment variables dict to use
-    
+
     Returns:
         True if command succeeded, False otherwise
     """
@@ -33,7 +33,7 @@ def run_command(command, cwd=None, shell=False, env=None):
             env=env,
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         print(result.stdout)
         return True
@@ -49,18 +49,18 @@ def deploy_module(module_path):
 
     Args:
         module_path: Path to the module directory
-    
+
     Returns:
         True if deployment succeeded, False otherwise
     """
     print(f"\nDeploying module in {module_path}...")
-    
+
     # Check if .venv exists
     venv_path = os.path.join(module_path, ".venv")
     if not os.path.exists(venv_path):
         print(f"No .venv found in {module_path}, skipping...")
         return False
-        
+
     # Check if app_setup.py exists
     setup_script = os.path.join(module_path, "app_setup.py")
     if not os.path.exists(setup_script):
@@ -90,34 +90,44 @@ def deploy_module(module_path):
 def main():
     """Main function to deploy all modules."""
     print("Starting deployment of all modules...")
-    
+
     # First ensure AWS SSO login is done
     if not run_command("aws sso login", shell=True):
         print("AWS SSO login failed, aborting deployment")
         sys.exit(1)
 
-    # Get current directory
-    current_dir = os.getcwd()
-    
+    # Get the base directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    print(f"Base directory: {base_dir}")
+
     # Get immediate subdirectories
     subdirs = [
-        d for d in os.listdir(current_dir)
-        if os.path.isdir(os.path.join(current_dir, d)) and not d.startswith('.')
+        d
+        for d in os.listdir(base_dir)
+        if os.path.isdir(os.path.join(base_dir, d)) and not d.startswith(".")
     ]
 
     if not subdirs:
         print("No subdirectories found to deploy")
         return
 
+    print(subdirs)
+
+    sys.exit(1)
+
     # Deploy each module
     success_count = 0
     for subdir in subdirs:
-        module_path = os.path.join(current_dir, subdir)
+        module_path = os.path.join(base_dir, subdir)
         if deploy_module(module_path):
             success_count += 1
 
     # Print summary
-    print(f"\nDeployment complete: {success_count}/{len(subdirs)} modules deployed successfully")
+    print(
+        f"\nDeployment complete: {success_count}/{len(subdirs)}"
+        " modules deployed successfully"
+    )
     if success_count != len(subdirs):
         sys.exit(1)
 
