@@ -10,6 +10,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 
 
 def run_command(command, cwd=None, shell=False, env=None):
@@ -99,6 +100,9 @@ def deploy_module(module_path):
 
 def main():
     """Main function to deploy all modules."""
+    # control the execution time
+    start_time = time.time()
+
     print("Starting deployment of all modules...")
 
     # First ensure AWS SSO login is done
@@ -151,6 +155,10 @@ def main():
         f"\nDeployment complete: {success_count}/{len(subdirs)}"
         " modules deployed successfully"
     )
+
+    # Print execution time
+    print(f"\nTotal execution time: {time.time() - start_time:.2f} seconds")
+
     if success_count != len(subdirs):
         sys.exit(1)
 
