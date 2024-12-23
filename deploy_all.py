@@ -25,6 +25,7 @@ def retry_on_failure(max_attempts=3, delay=5):
     Returns:
         Decorator function
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -44,7 +45,9 @@ def retry_on_failure(max_attempts=3, delay=5):
                     print(f"Retrying in {delay} seconds...")
                     time.sleep(delay)
             return False
+
         return wrapper
+
     return decorator
 
 
