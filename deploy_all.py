@@ -27,20 +27,20 @@ def run_command(command, cwd=None, shell=False, env=None):
         True if command succeeded, False otherwise
     """
     try:
-        result = subprocess.run(
+        subprocess.run(
             command,
             shell=shell,
             cwd=cwd,
             env=env,
             check=True,
-            capture_output=True,
+            capture_output=False,
             text=True,
+            # ensure the command output is shown in the console
+            stdout=subprocess.PIPE,
         )
-        print(result.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error running command '{command}' in {cwd}:")
-        print(e.stderr)
+        print(f"Error running command '{command}' in {cwd}:\n{e}")
         return False
 
 
@@ -54,8 +54,6 @@ def deploy_module(module_path):
     Returns:
         True if deployment succeeded, False otherwise
     """
-    print(f"\nDeploying module in {module_path}...")
-
     # Check if app_setup.py exists
     setup_script = os.path.join(module_path, "app_setup.py")
     if not os.path.exists(setup_script):
@@ -63,7 +61,7 @@ def deploy_module(module_path):
         return False
 
     # Recreate the Python virtual environment using the app_setup.py script
-    command = " python3.11 app_setup.py setup"
+    command = "python3.11 app_setup.py setup"
     if not run_command(command, cwd=module_path, shell=True):
         print(f"Failed to recreate virtual environment in {module_path}, skipping...")
         return False
@@ -79,32 +77,25 @@ def deploy_module(module_path):
     else:
         activate_script = os.path.join(venv_path, "bin", "activate")
 
-    # if not os.path.exists(activate_script):
-    #     print(f"No activation script found at {activate_script}, skipping...")
-    #     return False
-
     # Create command that sources venv and runs deploy
     if sys.platform == "win32":
-        command = f"{activate_script}"
+        command = f"{activate_script} && python app_setup.py deploy"
     else:
-        command = f"bash -c source {activate_script}"
+        command = (
+            f"/bin/bash -c 'source \"{activate_script}\" && python app_setup.py deploy'"
+        )
 
-    # Update the permissions of the activate script to allow
+    # Ensure the right permissions to allow the activate script
     # execution by a external process
     os.chmod(activate_script, 0o755)
 
-    print(command)
-
     # Run the environment activation command
     if not run_command(command, cwd=module_path, shell=True):
-        print(f"Failed to activate virtual environment in {module_path}, skipping...")
+        print(f"Failed to deploy {module_path}, skipping...")
         return False
-
-    print(f"Activated virtual environment in {module_path}")
-
-    # Run the deploy command
-    command = "python app_setup.py deploy"
-    return run_command(command, cwd=module_path, shell=True)
+    # else: Everything right
+    print(f"Deployed {module_path} successfully.")
+    return True
 
 
 def main():
@@ -146,8 +137,12 @@ def main():
 
     # Deploy each module
     success_count = 0
+    new_line_str = "\n" + "-" * 80
     for subdir in subdirs:
         module_path = os.path.join(base_dir, subdir)
+        print(new_line_str)
+        print(f"Deploying module in {module_path}...")
+        print(new_line_str)
         if deploy_module(module_path):
             success_count += 1
 
