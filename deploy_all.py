@@ -185,8 +185,13 @@ def main():
         print(new_line_str)
         print(f"DEPLOYING STACK IN: {module_path}")
         print(new_line_str)
-        if deploy_module(module_path):
-            success_count += 1
+        try:
+            if deploy_module(module_path):
+                success_count += 1
+        except Exception as e:
+            print(f"Failed to deploy {module_path}: {e}")
+            # skip to the next module
+            continue
 
     # Print summary
     print(
