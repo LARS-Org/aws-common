@@ -399,7 +399,8 @@ def http_request(
                 string otherwise)
     :raises: JSONDecodeError if the response body is not valid JSON.
     """
-    import urllib3
+    # It's necessary keep this import here to avoid circular dependencies
+    import urllib3  # pylint: disable=import-outside-toplevel
 
     http = urllib3.PoolManager()
 

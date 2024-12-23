@@ -57,8 +57,6 @@ def _install_dev_requirements(do_log_func, run_cmd_func, target=None):
     if target:
         cmd_list += ["--target", target]
     run_cmd_func(cmd_list)
-    # Log completion of the installation/upgrade process.
-    do_log_func("*** Installation/upgrade completed successfully.")
 
 
 def _install_from_aws_common(do_log_func, run_cmd_func, target=None):
