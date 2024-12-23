@@ -1,0 +1,4 @@
+# The libraries specified here will be installed only in 
+# the local Python virtual environments to ensure the scripts are executed.
+urllib3<1.27,>=1.25.4
+boto3==1.35.86

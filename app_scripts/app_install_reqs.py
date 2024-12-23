@@ -32,6 +32,35 @@ def _upgrade_pip(do_log_func, run_cmd_func):
     do_log_func("*** Upgraded pip.")
 
 
+def _install_dev_requirements(do_log_func, run_cmd_func, target=None):
+    """
+    Installs or upgrades essential module dependencies directly from
+    the aws-common project.
+
+    Parameters:
+    do_log_func (function): A logging function to record progress messages.
+    run_cmd_func (function): A function to execute shell commands.
+    target (str, optional): The target directory where the dependencies
+                            should be installed. Defaults to None.
+    """
+    # Install dependencies from the requirements-dev.txt file located
+    # in the aws-common project.
+    # The libraries specified in the requirements.dev.txt will be installed only
+    # in the local Python virtual environments to ensure the scripts are executed.
+    # The requirements-dev.txt file is expected to be in the
+    # parent directory of this script.
+    aws_common_req_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "requirements-dev.txt"
+    )
+    do_log_func(f"*** Installing/upgrading from {aws_common_req_path}...")
+    cmd_list = ["pip", "install", "-r", aws_common_req_path, "--quiet"]
+    if target:
+        cmd_list += ["--target", target]
+    run_cmd_func(cmd_list)
+    # Log completion of the installation/upgrade process.
+    do_log_func("*** Installation/upgrade completed successfully.")
+
+
 def _install_from_aws_common(do_log_func, run_cmd_func, target=None):
     """
     Installs or upgrades essential module dependencies directly from
@@ -176,6 +205,7 @@ def do_install_req(do_log_func, run_cmd_func):
     _purge_pip_cache(do_log_func, run_cmd_func)
     _remove_pip_selfcheck(do_log_func)
     _upgrade_pip(do_log_func, run_cmd_func)
+    _install_dev_requirements(do_log_func, run_cmd_func)
     _install_from_aws_common(do_log_func, run_cmd_func)
     _install_requirements_recursively(do_log_func, run_cmd_func)
     _install_other_packages(do_log_func, run_cmd_func)
