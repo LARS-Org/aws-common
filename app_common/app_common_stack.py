@@ -9,6 +9,7 @@ import boto3
 import jsii
 from aws_cdk import Aspects, Duration, IAspect, RemovalPolicy, Stack
 from aws_cdk import aws_dynamodb as dynamodb
+from aws_cdk import aws_events as events
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_sns as sns
@@ -318,3 +319,34 @@ class AppCommonStack(Stack):
         self.do_log(f"Created DynamoDB table {table_name}")
 
         return new_table
+
+    def _get_event_bus_name(self) -> str:
+        """ "
+        Returns the name of the FlowOrchestrator EventBridge event bus.
+        That can be overridden in subclasses to use a different bus.
+        """
+        return "FlowOrchestratorEventBus"
+
+    def _get_or_create_event_bus(self):
+        """
+        Returns the EventBridge event bus for the FlowOrchestrator.
+        If the bus does not exist, it will be created.
+        """
+        # Name of the EventBus
+        event_bus_name = self._get_event_bus_name()
+
+        # Check if the EventBus already exists
+        try:
+            event_bus = events.EventBus.from_event_bus_name(
+                self, event_bus_name, event_bus_name
+            )
+        except Exception:
+            # If it doesn't exist, create a new one
+            event_bus = events.EventBus(
+                self, event_bus_name, event_bus_name=event_bus_name
+            )
+
+        # Register the EventBus name in SSM Parameter Store
+        self._ensure_ssm_parameter(event_bus_name, "global")
+
+        return event_bus
