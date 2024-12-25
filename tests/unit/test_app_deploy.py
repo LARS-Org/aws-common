@@ -1,8 +1,9 @@
 """
 Unit tests for app_deploy module.
 """
-import pytest
+
 from unittest.mock import Mock
+
 from app_scripts.app_deploy import do_deploy
 
 
@@ -21,6 +22,7 @@ def test_do_deploy():
 
     # Verify the commands were run with correct parameters
     from unittest.mock import call
+
     expected_calls = [
         call("npm install -g aws-cdk", shell=True),
         call("cdk bootstrap", shell=True),
