@@ -340,13 +340,19 @@ class AppCommonStack(Stack):
             event_bus = events.EventBus.from_event_bus_name(
                 self, event_bus_name, event_bus_name
             )
-        except Exception:
+        except Exception as e:
             # If it doesn't exist, create a new one
+            self.do_log(
+                title="Error when trying to get the EventBus. Creating a new one.",
+                obj=str(e),
+            )
             event_bus = events.EventBus(
                 self, event_bus_name, event_bus_name=event_bus_name
             )
 
         # Register the EventBus name in SSM Parameter Store
-        self._ensure_ssm_parameter(event_bus_name, "global")
+        self._ensure_ssm_parameter(
+            parameter_name="EventBusName", value=event_bus_name, custom_path="global"
+        )
 
         return event_bus
