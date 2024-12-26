@@ -350,6 +350,8 @@ class AppCommonStack(Stack):
                 self, event_bus_name, event_bus_name=event_bus_name
             )
 
+        self.do_log(f"EventBus loaded successfully: {event_bus.event_bus_name}")
+
         # Register the EventBus name in SSM Parameter Store
         self._ensure_ssm_parameter(
             parameter_name="EventBusName", value=event_bus_name, custom_path="global"
