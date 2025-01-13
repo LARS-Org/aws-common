@@ -307,3 +307,8 @@ class AppCommonStack(Stack):
         self.do_log(f"EventBus: {custom_event_bus_name} created")
 
         return custom_event_bus
+
+    def _import_sns_topic(self, topic_name: str) -> sns.ITopic:
+        """Imports an existing SNS topic by name."""
+        topic_arn = f"arn:aws:sns:{self.region}:{self.account}:{topic_name}"
+        return sns.Topic.from_topic_arn(self, topic_name, topic_arn)
