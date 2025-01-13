@@ -104,6 +104,13 @@ class BaseLambdaHandler(ABC):
         # Just print the exception.
         self.do_log(title="Exception Found", obj=error_details)
 
+        # Publish the exception on the custom event bus
+        self.publish_to_custom_event_bus(
+            message=error_details,
+            detail_type="ExceptionRaised",
+            source="ErrorControl",
+        )
+
     def _security_check(self) -> bool:
         """
         Performs a security check to verify that the current lambda function
@@ -316,7 +323,9 @@ class BaseLambdaHandler(ABC):
 
         return response
 
-    def publish_to_custom_event_bus(self, message: dict, detail_type: str):
+    def publish_to_custom_event_bus(
+        self, message: dict, detail_type: str, source: str = None
+    ):
         """
         Publishes a message to the custom event bus.
         """
@@ -324,6 +333,7 @@ class BaseLambdaHandler(ABC):
             event_bus_name=self._get_custom_event_bus_name(),
             message=message,
             detail_type=detail_type,
+            source=source,
         )
 
     def _do_the_job(self):
