@@ -310,7 +310,7 @@ class BaseLambdaHandler(ABC):
         event = {
             "Source": source,
             "DetailType": detail_type,
-            "Detail": self.json_dumps(message),
+            "Detail": message,
             "EventBusName": event_bus_name,
         }
 
