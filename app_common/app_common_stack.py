@@ -49,7 +49,7 @@ class GrantPublishToCustomEventBusAspect:
                     ],
                 )
             )
-            # Add the custom event bus name as a enviroment variable
+            # Add the custom event bus name as a environment variable
             node.add_environment("CUSTOM_EVENT_BUS_NAME", self.custom_event_bus_name)
 
 
