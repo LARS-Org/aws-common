@@ -107,8 +107,8 @@ class BaseLambdaHandler(ABC):
             self.do_log(title="Exception Found", obj=error_details)
             self.publish_to_custom_event_bus(
                 message=error_details,
-                detail_type="ExceptionRaised",
-                source="ErrorControl",
+                detail_type="NewExceptionRaised",
+                source="BaseLambdaHandler",
             )
         except Exception as e:
             self.do_log(
