@@ -65,26 +65,6 @@ class TestBaseLambdaHandler:
         assert self.handler.body is None
         assert self.handler.headers is None
 
-    @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
-    def test_on_error(self, mock_do_log):
-        """
-        Test that the _on_error method correctly handles exceptions and prints
-        the error and traceback.
-        """
-        error_message = "Test Exception"
-
-        try:
-            raise Exception(error_message)
-        except Exception as e:
-            self.handler._on_error(e)
-
-        print(mock_do_log.mock_calls)
-
-        # Check that the error message is printed
-        mock_do_log.assert_any_call(
-            "TestLambdaHandler::OnError():: Error occurred", "Test Exception"
-        )
-
     def test_handle(self):
         """
         Test that the _handle method in the TestLambdaHandler works as expected.

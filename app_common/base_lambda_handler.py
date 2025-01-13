@@ -91,46 +91,18 @@ class BaseLambdaHandler(ABC):
             "line_number": line_number,
         }
 
-    def _get_error_topic_arn(self) -> str:
+    def _on_error(self, error_details: dict):
         """
-        Retrieves the ARN of the SNS topic to which error notifications
-        are sent from the environment variables.
-        """
-        return self.get_env_var("ERROR_TOPIC_ARN")
+        Handles errors that occur during lambda execution by logging the error details.
 
-    def _send_error_notification(self, e: Exception):
-        """
-        Sends an error notification to the error SNS topic.
-        """
-        error_topic_arn = self._get_error_topic_arn()
+        This method is called when an exception occurs during lambda processing.
+        It receives a dictionary containing details about the error and logs them
+        using the do_log method.
 
-        # Extract error details
-        error_details = self.extract_error_details(e)
-        # Add the original payload and other details as metadata
-        error_details["metadata"] = self.job_return
-        # Add app_id and user_id to the error details
-        error_details["app_id"] = "unknown"
-        error_details["user_id"] = "unknown"
-        if self.body:
-            error_details["app_id"] = self.body.get("app_id", "unknown")
-            error_details["user_id"] = self.body.get("cbf_user_uuid", "unknown")
-
-        # Publish the error details to the error SNS topic
-        if error_topic_arn:
-            self.publish_to_sns(error_topic_arn, error_details)
-
-    def _on_error(self, e: Exception):
+        It can be override for a custom behaviour.
         """
-        Handles errors that occurred during a lambda function invocation. The
-        parameter ``e`` is usually an exception instance with information on
-        what caused the error.
-        """
-        # Print the exception.
-        this_class_name = self.__class__.__name__
-        error_title = f"{this_class_name}::OnError():: Error occurred"
-        self.do_log(error_title, str(e))
-        # Send an error notification
-        self._send_error_notification(e)
+        # Just print the exception.
+        self.do_log(title="Exception Found", obj=error_details)
 
     def _security_check(self) -> bool:
         """
@@ -236,17 +208,6 @@ class BaseLambdaHandler(ABC):
         self.do_log(self.context, title="*** Context")
         self.do_log(self.body, title="*** Body")
 
-    def _handle_error_job(self) -> dict:
-        """
-        Handles an error job forwarded to the lambda function.
-        The default implentation just forwards the error message to the
-        next lambda function.
-        If a specific implementation is needed, this method should be overridden.
-        V.G.: Send an email to the support team or show a message to the user.
-        """
-        # just forwarding the payload object
-        return self.body
-
     def __call__(self, event, context):
         """
         Performs all the tasks required to service a lambda function
@@ -296,12 +257,74 @@ class BaseLambdaHandler(ABC):
         # Override this method to return a list of SNS topics, if needed.
         return []
 
-    def _call_listeners(self, job_return):
+    def _get_custom_event_bus_name(self):
         """
-        Calls the listeners of the lambda.
+        Returns the name of the custom EventBridge event bus.
         """
-        for sns_topic in self._get_sns_topic_listeners():
-            self.publish_to_sns(topic_arn=sns_topic, message=job_return)
+        return self.get_env_var("CUSTOM_EVENT_BUS_NAME")
+
+    def publish_to_event_bus(
+        self,
+        event_bus_name: str,
+        message: dict,
+        detail_type: str,
+        source: str = None,
+    ):
+        """
+        Publish a message to an Amazon EventBridge event bus.
+
+        Args:
+            event_bus_name (str): The name of the custom EventBridge event bus
+                                  to publish to.
+            message (dict): The message payload to publish. If dict, will be converted
+                            to JSON string.
+            detail_type (str): The detail-type field that will be attached to the event.
+            source (str, optional): The source field that will be attached to the event.
+                                    Defaults to class name if not provided.
+
+        Returns:
+            dict: Response from EventBridge PutEvents API containing fields like
+                 'Entries' and 'FailedEntryCount'.
+
+        Raises:
+            RuntimeError: If any events fail to publish (FailedEntryCount > 0).
+        """
+        eventbridge_client = boto3.client("events")
+
+        if not source:
+            # source equal the current class name
+            source = self.__class__.__name__
+
+        event = {
+            "Source": source,
+            "DetailType": detail_type,
+            "Detail": message,
+            "EventBusName": event_bus_name,
+        }
+
+        response = eventbridge_client.put_events(Entries=[event])
+
+        if response["FailedEntryCount"] > 0:
+            raise RuntimeError(f"Failed to publish event: {response['Entries']}")
+
+        self.do_log(
+            title=f"Event published to EventBridge Bus {event_bus_name}", obj=response
+        )
+        # remove the Detail field from the event to avoid logging it again
+        event.pop("Detail")
+        self.do_log(event)
+
+        return response
+
+    def publish_to_custom_event_bus(self, message: dict, detail_type: str):
+        """
+        Publishes a message to the custom event bus.
+        """
+        self.publish_to_event_bus(
+            event_bus_name=self._get_custom_event_bus_name(),
+            message=message,
+            detail_type=detail_type,
+        )
 
     def _do_the_job(self):
         """
@@ -333,22 +356,8 @@ class BaseLambdaHandler(ABC):
             # else: it is ok to proceed
             self._before_handle()
             self.do_log("** before_handle() is done.")
-            self.job_return = None
-
-            # Check if there is an "error" key on the body dict.
-            # Observe that, in some cases, the self.body can be None
-            # (v.g.: an web application).
-            if self.body and isinstance(self.body, dict) and "error" in self.body:
-                # just forward the error message to be handled
-                # by the next lambda function
-                self.do_log("Error found in the input message.")
-                self.job_return = self._handle_error_job()
-                self.do_log("** handle_error_job() is done.")
-            else:
-                # the _handle event is called only when
-                # there are no errors on self.body
-                self.job_return = self._handle()
-                self.do_log("** handle() is done.")
+            self.job_return = self._handle()
+            self.do_log("** handle() is done.")
             self._after_handle()
             self.do_log("** after_handle() is done.")
         except Exception as e:
@@ -372,10 +381,11 @@ class BaseLambdaHandler(ABC):
                     ),
                 },
             }
-            # call the on_error method
-            self._on_error(e)
+            # Add more details
+            self.job_return.update(self.extract_error_details(e))
 
-        self._call_listeners(self.job_return)
+            # call the on_error method
+            self._on_error(self.job_return)
 
         self._account_execution_costs()
         return self.job_return

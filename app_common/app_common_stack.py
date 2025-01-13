@@ -5,7 +5,6 @@ The stack also creates an SSM parameter to store the ErrorHandlingTopic ARN.
 This can be used as a base class for other utility features to be added to a stack.
 """
 
-import boto3
 import jsii
 from aws_cdk import Aspects, Duration, IAspect, RemovalPolicy, Stack
 from aws_cdk import aws_dynamodb as dynamodb
@@ -20,14 +19,14 @@ from app_common.app_utils import _do_log
 
 
 @jsii.implements(IAspect)
-class GrantPublishToSnsAspect:
+class GrantPublishToCustomEventBusAspect:
     """
     Aspect that automatically grants permissions for all Lambda functions
-    in the stack to publish to a specific SNS topic.
+    in the stack to publish to a specific EventBridge event bus.
     """
 
-    def __init__(self, error_handling_topic_arn: str) -> None:
-        self.error_handling_topic_arn = error_handling_topic_arn
+    def __init__(self, custom_event_bus_name: str) -> None:
+        self.custom_event_bus_name = custom_event_bus_name
 
     def visit(self, node: IConstruct) -> None:
         """
@@ -35,16 +34,23 @@ class GrantPublishToSnsAspect:
         the necessary permissions.
         """
         if isinstance(node, _lambda.Function):
-            _do_log(obj=f"Granting publish permissions to Lambda: {node.function_name}")
+            _do_log(
+                obj=f"Granting publish permissions to Lambda: {node.function_name} "
+                f"to publish messages on the {self.custom_event_bus_name} event bus"
+            )
             node.add_to_role_policy(
                 iam.PolicyStatement(
                     effect=iam.Effect.ALLOW,
-                    actions=["sns:Publish"],
-                    resources=[self.error_handling_topic_arn],
+                    actions=["events:PutEvents"],
+                    resources=[
+                        f"arn:aws:events:{Stack.of(node).region}"
+                        f":{Stack.of(node).account}"
+                        f":event-bus/{self.custom_event_bus_name}"
+                    ],
                 )
             )
-            # Add the topic ARN to the lambda environment variables
-            node.add_environment("ERROR_TOPIC_ARN", self.error_handling_topic_arn)
+            # Add the custom event bus name as a enviroment variable
+            node.add_environment("CUSTOM_EVENT_BUS_NAME", self.custom_event_bus_name)
 
 
 class AppCommonStack(Stack):
@@ -56,23 +62,22 @@ class AppCommonStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create an SNS topic for error handling
-        self.error_handling_topic_arn = self._get_or_create_sns_topic_arn(
-            self._get_error_topic_name()
-        )
+        if self._get_custom_event_bus_name():
+            Aspects.of(self).add(
+                GrantPublishToCustomEventBusAspect(self._get_custom_event_bus_name())
+            )
 
-        # Store the SNS topic ARN in SSM Parameter Store
-        # So, each specialized stack is going to have its own parameter
-        # retrieving the ARN of the ErrorHandlingTopic
-        self._ensure_ssm_parameter(
-            "ErrorHandlingTopic-ARN",
-            self.error_handling_topic_arn,
-        )
+    def _get_default_param_custom_path(self):
+        """
+        Returns the default custom path for SSM parameters.
 
-        # Apply the aspect to grant publish permissions to all Lambda functions
-        Aspects.of(self).add(GrantPublishToSnsAspect(self.error_handling_topic_arn))
+        :return: The default custom path for SSM parameters.
+        """
+        if self.stack_name is None:
+            raise ValueError("Stack name is not set.")
+        return self.stack_name
 
-    def _ensure_ssm_parameter(
+    def _create_ssm_parameter(
         self, parameter_name: str, value: str, custom_path: str = None, **kwargs
     ) -> None:
         """
@@ -84,7 +89,7 @@ class AppCommonStack(Stack):
                             Defaults to the stack name if not provided.
         """
         # Use the custom path or default to the stack name
-        custom_path = custom_path or self.stack_name
+        custom_path = custom_path or self._get_default_param_custom_path()
 
         if custom_path.startswith("/"):
             # Remove the leading slash
@@ -108,105 +113,60 @@ class AppCommonStack(Stack):
 
         self.do_log(title="SSM Parameter Created/Updated", obj=full_parameter_name)
 
-    @staticmethod
-    def _get_or_create_sns_topic_arn(topic_name: str, ensure_creation=True) -> str:
-        """
-        Retrieves the ARN of an SNS topic by name, creating the topic
-        if it does not exist.
-        Automatically escalates permissions if required.
+    def _create_sns_topic(
+        self,
+        topic_name,
+        # TODO: #46 Study the use of FIFO SNS with a SQS as intermediary
+        # to allow lambda subscriptions
+        fifo=False,
+        message_retention_period_in_days=7,  # just in case of fifo topics
+        allow_event_bus_publish_on=True,
+        **kwargs,
+    ):
+        topic = None
 
-        :param topic_name: The name of the SNS topic.
-        :param ensure_creation: If False, raises an error if the topic doesn't exist.
-        :return: The ARN of the SNS topic.
-        """
-
-        sns_client = boto3.client("sns")
-        sts_client = boto3.client("sts")
-
-        # Get account details to construct the ARN
-        account_id = sts_client.get_caller_identity()["Account"]
-        region = sns_client.meta.region_name
-
-        # Construct the topic ARN
-        topic_arn = f"arn:aws:sns:{region}:{account_id}:{topic_name}"
-
-        # Try to create the topic directly (idempotent operation)
-        if ensure_creation:
-            AppCommonStack.do_log(obj=f"Ensuring SNS topic '{topic_name}' exists...")
-            create_response = sns_client.create_topic(Name=topic_name)
-            AppCommonStack.do_log(
-                obj=(
-                    f"Successfully ensured topic '{topic_name}'."
-                    f" ARN: {create_response['TopicArn']}"
-                )
+        if fifo:
+            # create a FIFO SNS topic
+            topic_name = f"{topic_name}.fifo"
+            topic = sns.Topic(
+                self,
+                id=topic_name,
+                topic_name=topic_name,
+                display_name=topic_name,
+                fifo=True,
+                content_based_deduplication=True,
+                message_retention_period_in_days=message_retention_period_in_days,
+                **kwargs,
             )
-            return create_response["TopicArn"]
         else:
-            # If automatic creation is disabled, assume the topic exists
-            AppCommonStack.do_log(
-                obj=(
-                    f"Checking if topic '{topic_name}' " "exists without creating it..."
+            topic = sns.Topic(
+                self,
+                id=topic_name,
+                topic_name=topic_name,
+                display_name=topic_name,
+                **kwargs,
+            )
+
+        if allow_event_bus_publish_on:
+            # Add a resource policy allowing only EventBridge event buses
+            # in the same account to publish messages
+            topic.add_to_resource_policy(
+                iam.PolicyStatement(
+                    sid=f"AllowEventBridgePublishOn-{topic_name}",
+                    effect=iam.Effect.ALLOW,
+                    principals=[iam.ServicePrincipal("events.amazonaws.com")],
+                    actions=["sns:Publish"],
+                    resources=[topic.topic_arn],
                 )
             )
-            return topic_arn
 
-    @staticmethod
-    def _get_sns_topic_arn(topic_name: str) -> str:
-        """
-        Retrieves the ARN of an SNS topic based on its name.
-
-        :param topic_name: The name of the SNS topic.
-        :return: The ARN of the SNS topic.
-        :raises ValueError: If the topic is not found.
-        """
-        return AppCommonStack._get_or_create_sns_topic_arn(
-            topic_name, ensure_creation=False
+        self._create_ssm_parameter(
+            topic_name + "-Arn", topic.topic_arn, self._get_default_param_custom_path()
         )
 
-    def _get_or_create_sns_topic(self, topic_name: str) -> sns.Topic:
-        """
-        Retrieves an SNS topic by name, creating the topic if it does not exist.
-        """
-        return sns.Topic.from_topic_arn(
-            self,
-            f"{self.stack_name}-{topic_name}",  # Unique ID for the topic
-            self._get_or_create_sns_topic_arn(topic_name),
-        )
+        self.do_log(title="SNS Topic Created", obj=f"{topic_name}\n{topic.topic_arn}")
 
-    def _get_or_create_sns_topic_with_sms_param(
-        self, topic_name: str, sufix="-ARN"
-    ) -> sns.Topic:
-        """
-        Retrieves an SNS topic by name, creating the topic if it does not exist.
-        The ARN of the topic is stored in SSM Parameter Store.
-        """
-        sns_topic = self._get_or_create_sns_topic(topic_name)
-        param_name = f"{topic_name}{sufix}"
-        self._ensure_ssm_parameter(param_name, sns_topic.topic_arn)
-        return sns_topic
-
-    def _get_error_topic_name(self) -> str:
-        """
-        The name of the SNS topic to which error notifications are sent.
-        This can be overridden in subclasses to provide a custom error topic name.
-        """
-        return "ErrorNotificationsTopic"
-
-    def _get_error_topic_arn(self) -> str:
-        """
-        Retrieves the ARN of the SNS topic to which error notifications are sent.
-        This method is used internally by the base class to send error notifications.
-        If the topic does not exist, it is created automatically.
-        """
-        return self._get_or_create_sns_topic_arn(self._get_error_topic_name())
-
-    def _get_error_topic(self) -> sns.Topic:
-        """
-        Retrieves the SNS topic to which error notifications are sent.
-        """
-        return self._get_or_create_sns_topic_with_sms_param(
-            self._get_error_topic_name()
-        )
+        return topic
 
     def _grant_ssm_parameter_access(
         self, lambda_function: _lambda.Function, param_full_path: str
@@ -320,41 +280,30 @@ class AppCommonStack(Stack):
 
         return new_table
 
-    def _get_event_bus_name(self) -> str:
-        """ "
+    def _get_custom_event_bus_name(self) -> str:
+        """
         Returns the name of the FlowOrchestrator EventBridge event bus.
         That can be overridden in subclasses to use a different bus.
         """
         return "FlowOrchestratorEventBus"
 
-    def _get_or_create_event_bus(self):
+    def _create_custom_event_bus(self):
         """
-        Returns the EventBridge event bus for the FlowOrchestrator.
-        If the bus does not exist, it will be created.
+        Creates an EventBridge event bus with the specified name.
         """
-        # Name of the EventBus
-        event_bus_name = self._get_event_bus_name()
+        custom_event_bus_name = self._get_custom_event_bus_name()
 
-        # Check if the EventBus already exists
-        try:
-            event_bus = events.EventBus.from_event_bus_name(
-                self, event_bus_name, event_bus_name
-            )
-        except Exception as e:
-            # If it doesn't exist, create a new one
-            self.do_log(
-                title="Error when trying to get the EventBus. Creating a new one.",
-                obj=str(e),
-            )
-            event_bus = events.EventBus(
-                self, event_bus_name, event_bus_name=event_bus_name
-            )
-
-        self.do_log(f"EventBus loaded successfully: {event_bus.event_bus_name}")
-
-        # Register the EventBus name in SSM Parameter Store
-        self._ensure_ssm_parameter(
-            parameter_name="EventBusName", value=event_bus_name, custom_path="global"
+        if not custom_event_bus_name:
+            return None
+        # else:
+        self.do_log(f"Creating EventBus: {custom_event_bus_name}")
+        # Create the EventBus
+        custom_event_bus = events.EventBus(
+            self,
+            custom_event_bus_name,
+            event_bus_name=custom_event_bus_name,
         )
 
-        return event_bus
+        self.do_log(f"EventBus: {custom_event_bus_name} created")
+
+        return custom_event_bus
