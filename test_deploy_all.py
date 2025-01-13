@@ -17,7 +17,7 @@ class TestDeployAll(unittest.TestCase):
         os.makedirs(self.module_path, exist_ok=True)
 
         # Create venv structure
-        venv_dir = os.path.join(self.module_path, ".venv")
+        venv_dir = os.path.join(self.module_path, "venv")
         os.makedirs(os.path.join(venv_dir, "bin"), exist_ok=True)
 
         # Create activate script

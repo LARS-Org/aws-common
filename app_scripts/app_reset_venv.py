@@ -4,7 +4,7 @@ import os
 import shutil
 
 # The directory where the Python virtual environment is stored
-PYTHON_VENV_DIR = ".venv"
+PYTHON_VENV_DIR = "venv"
 
 
 def do_reset_venv(do_log_func, run_cmd_func):

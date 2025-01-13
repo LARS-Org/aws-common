@@ -111,7 +111,7 @@ def _install_requirements_recursively(do_log_func, run_cmd_func):
             skip in root
             for skip in [
                 ".aws-sam",
-                ".venv",
+                "venv",
                 ".git",
                 ".pytest",
                 "lib/python",
