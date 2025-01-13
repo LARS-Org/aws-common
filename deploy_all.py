@@ -2,7 +2,7 @@
 Script to deploy all project modules in immediate subfolders.
 
 For each immediate subfolder:
-1. Activates the Python virtual environment at .venv/bin/activate
+1. Activates the Python virtual environment at venv/bin/activate
 2. Runs python app_setup.py deploy
 """
 
@@ -126,8 +126,8 @@ def deploy_module(module_path):
 
     print(f"Recreated virtual environment in {module_path}")
 
-    # the .venv directory is created by the app_setup.py script
-    venv_path = os.path.join(module_path, ".venv")
+    # the venv directory is created by the app_setup.py script
+    venv_path = os.path.join(module_path, "venv")
 
     # Get the activate script path
     if sys.platform == "win32":
