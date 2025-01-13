@@ -99,7 +99,7 @@ class BaseLambdaHandler(ABC):
         It receives a dictionary containing details about the error and logs them
         using the do_log method.
 
-        It can be override for a custom behaviour.
+        It can be overridden for a custom behaviour.
         """
         # Just print the exception.
         self.do_log(title="Exception Found", obj=error_details)
