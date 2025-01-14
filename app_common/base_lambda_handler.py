@@ -307,6 +307,9 @@ class BaseLambdaHandler(ABC):
             # source equal the current class name
             source = self.__class__.__name__
 
+        if isinstance(message, dict):
+            message = self.json_dumps(message)
+
         event = {
             "Source": source,
             "DetailType": detail_type,
