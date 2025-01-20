@@ -87,6 +87,7 @@ def _do_log(
     line_break_chars: str = " ",
     list_sample_size: int = 5,
     json_indent: int = 4,
+    deep_limit: int = 3,
 ):
     """
     Logs an object to the console in a single entry,
@@ -104,20 +105,23 @@ def _do_log(
         # else: the value len is not above the limit
         return value  # returning as is
 
-    def process(obj):
+    def process(obj, deep=1):
         """
         Recursively processes objects (dicts and lists) into
         a flat representation with truncation.
         """
+        if deep >= deep_limit:
+            return truncate(obj, line_len_limit)
+
         if isinstance(obj, dict):
-            return {k: process(v) for k, v in obj.items()}
+            return {k: process(v, deep + 1) for k, v in obj.items()}
         elif isinstance(obj, list):
-            str_return = [process(v) for v in obj[:list_sample_size]]
+            str_return = [process(v, deep + 1) for v in obj[:list_sample_size]]
             if len(obj) > list_sample_size:
                 str_return.append(f"<...and {len(obj) - list_sample_size} more>")
             return str_return
-        else:
-            return truncate(obj, line_len_limit)
+        # else:
+        return truncate(obj, line_len_limit)
 
     # Process the object
     processed_obj = process(obj)
