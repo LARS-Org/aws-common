@@ -11,6 +11,7 @@ from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_events as events
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
+from aws_cdk import aws_logs as logs
 from aws_cdk import aws_sns as sns
 from aws_cdk import aws_ssm as ssm
 from constructs import Construct, IConstruct
@@ -221,11 +222,15 @@ class AppCommonStack(Stack):
         duration_seconds: int = 30,
         from_asset: str = "lambdas",
         runtime=_lambda.Runtime.PYTHON_3_11,
+        log_retention=logs.RetentionDays.THREE_MONTHS,
         **kwargs,
     ) -> _lambda.Function:
         """
         Utility method to create a Lambda function with the specified configuration.
+        Ensures the Lambda's log group retention policy is set
+        according with the log_retention parameter.
         """
+        # Create the Lambda function
         lambda_obj = _lambda.Function(
             self,
             name,
@@ -238,7 +243,18 @@ class AppCommonStack(Stack):
             **kwargs,
         )
 
-        self.do_log(f"Created Lambda function {name}")
+        # Update log group retention according to the log_retention parameter
+        logs.LogRetention(
+            self,
+            f"{name}LogRetention",
+            log_group_name=f"/aws/lambda/{lambda_obj.function_name}",
+            retention=log_retention,
+        )
+
+        self.do_log(
+            f"Created Lambda function {name} with a "
+            f"{log_retention} log retention policy."
+        )
 
         return lambda_obj
 
