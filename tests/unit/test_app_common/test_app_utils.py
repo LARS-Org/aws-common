@@ -317,7 +317,7 @@ class TestDoLog:
         """
         test_str = "Hello, this is a test."
         _do_log(test_str)
-        mock_print.assert_called_once_with(test_str)
+        mock_print.assert_called_once_with('"Hello, this is a test."')
 
     @patch("builtins.print")
     def test_do_log_truncated_string(self, mock_print):
@@ -327,7 +327,9 @@ class TestDoLog:
         test_str = "a" * 200
         log_limit = 50
         _do_log(test_str, log_limit=log_limit)
-        mock_print.assert_called_once_with(("a" * log_limit) + "…")
+        mock_print.assert_called_once_with(
+            '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..."'
+        )
 
     @patch("builtins.print")
     def test_do_log_with_title(self, mock_print):
@@ -337,38 +339,51 @@ class TestDoLog:
         test_str = "Test string"
         title = "Title"
         _do_log(test_str, title=title)
-        mock_print.assert_any_call(title)
-        mock_print.assert_any_call(test_str)
+        mock_print.assert_called_once_with('Title: "Test string"')
 
     @patch("builtins.print")
     def test_do_log_dictionary(self, mock_print):
         """
-        Test logging a dictionary.
+        Test logging a dictionary with truncation.
         """
         test_dict = {
             "key1": "value1",
-            "key2": {"subkey1": "subvalue1", "subkey2": "subvalue2"},
+            "key2": "a" * 200,
         }
         _do_log(test_dict, log_limit=50)
-        calls = [call[0][0] for call in mock_print.call_args_list]
-        assert (
-            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
-            "--key1=value1\r"
-            "--key2=[TYPE: <class 'dict'>]; Key count = 2; Key/va…\r"
-            "----subkey1=subvalue1 subkey2=subvalue2" in calls  # noqa:E501  # noqa:E131
+        mock_print.assert_called_once_with(
+            '{"key1": "value1", "key2": '
+            '"aaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            'aaaaaaaaaaaaaaaaaaaaaaa..."}'
+        )
+
+    @patch("builtins.print")
+    def test_do_log_nested_dictionary(self, mock_print):
+        """
+        Test logging a nested dictionary.
+        """
+        test_dict = {
+            "outer_key": {
+                "inner_key1": "short_value",
+                "inner_key2": "a" * 200,
+            }
+        }
+        _do_log(test_dict, log_limit=50)
+        mock_print.assert_called_once_with(
+            '{"outer_key": {"inner_key1": "short_value", '
+            '"inner_key2": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            'aaaaaaaaaaaaaaaaaaaa..."}}'
         )
 
     @patch("builtins.print")
     def test_do_log_list(self, mock_print):
         """
-        Test logging a list.
+        Test logging a list with truncation.
         """
-        test_list = ["element1", "element2", "element3"]
+        test_list = ["value1", "a" * 200]
         _do_log(test_list, log_limit=50)
-        calls = [call[0][0] for call in mock_print.call_args_list]
-        assert (
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
-            "--[0]=element1 [1]=element2" in calls
+        mock_print.assert_called_once_with(
+            '["value1", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..."]'
         )
 
     @patch("builtins.print")
@@ -377,7 +392,7 @@ class TestDoLog:
         Test logging an empty dictionary.
         """
         _do_log({})
-        mock_print.assert_called_once_with("[TYPE: <class 'dict'>]; Key count = 0")
+        mock_print.assert_called_once_with("{}")
 
     @patch("builtins.print")
     def test_do_log_empty_list(self, mock_print):
@@ -385,182 +400,40 @@ class TestDoLog:
         Test logging an empty list.
         """
         _do_log([])
-        mock_print.assert_called_once_with("[TYPE: <class 'list'>]; Size = 0")
+        mock_print.assert_called_once_with("[]")
 
     @patch("builtins.print")
-    def test_do_log_default_case_int(self, mock_print):
+    def test_do_log_non_string_value(self, mock_print):
         """
-        Test logging an integer (default case).
+        Test logging a non-string value.
         """
-        _do_log(42, log_limit=50)
+        _do_log(42)
         mock_print.assert_called_once_with("42")
 
     @patch("builtins.print")
-    def test_do_log_default_case_float(self, mock_print):
+    def test_do_log_nested_mixed_structure(self, mock_print):
         """
-        Test logging a float (default case).
+        Test logging a nested structure with mixed types.
         """
-        _do_log(3.14159, log_limit=50)
-        mock_print.assert_called_once_with("3.14159")
-
-    @patch("builtins.print")
-    def test_do_log_default_case_object(self, mock_print):
-        """
-        Test logging an object instance (default case).
-        """
-
-        class SampleObject:
-            def __str__(self):
-                return "SampleObjectRepresentation"
-
-        obj = SampleObject()
-        _do_log(obj, log_limit=50)
-        mock_print.assert_called_once_with("SampleObjectRepresentation")
-
-    @patch("builtins.print")
-    def test_do_log_truncated_object(self, mock_print):
-        """
-        Test logging a long object string representation that should be truncated.
-        """
-
-        class SampleObject:
-            def __str__(self):
-                return "A" * 200
-
-        obj = SampleObject()
-        log_limit = 50
-        _do_log(obj, log_limit=log_limit)
-        mock_print.assert_called_once_with(("A" * log_limit) + "…")
-
-    @patch("builtins.print")
-    def test_do_log_multiple_dict_scenarios(self, mock_print):
-        """
-        Test logging multiple dictionary scenarios.
-        """
-
-        # A single key/value pair.
-        log_limit = 50
-        _do_log({"key_1": "value_1"}, log_limit=log_limit)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 1; Key/value pairs:\r"
-            "--key_1=value_1"
-        )
-
-        # Multiple key/value pairs without line truncation.
-        # Key/value pairs are sorted in descending order by the length of the
-        # key added to the length of the value
-        _do_log({"key_1": "value_1", "key_2": "long_value_2"}, log_limit=log_limit)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
-            "--key_2=long_value_2 key_1=value_1"
-        )
-
-        # Multiple key/value pairs with line truncation.
-        # Key/value pairs are sorted in descending order by the length of the
-        # key added to the length of the value. Also, keys and/or values that
-        # are too long get truncated
-        _do_log(
-            {"key_1": "value_1", "key_2": "long_value_2", "key_3": "A" * 50},
-            log_limit=log_limit,
-        )
-        mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 3; Key/value pairs:\r"
-            "--key_3=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…\r"
-            "--key_2=long_value_2 key_1=value_1"
+        test_data = {
+            "key1": ["a" * 200, {"nested_key": "b" * 200}],
+            "key2": 42,
+        }
+        _do_log(test_data, log_limit=50)
+        mock_print.assert_called_once_with(
+            '{"key1": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...", '
+            '{"nested_key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..."}]'
+            ', "key2": 42}'
         )
 
     @patch("builtins.print")
-    def test_do_log_multiple_list_scenarios(self, mock_print):
+    def test_do_log_with_line_break_chars(self, mock_print):
         """
-        Test logging multiple list scenarios.
+        Test logging with custom line break characters.
         """
-
-        # A single element.
-        log_limit = 50
-        _do_log(["value_1"], log_limit=log_limit)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 1; Sample:\r" "--[0]=value_1"
-        )
-
-        # Two elements.
-        _do_log(["value_1", 42], log_limit=log_limit)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 2; Sample:\r" "--[0]=value_1 [1]=42"
-        )
-
-        # Three elements, truncated to two.
-        three_elems_list = ["value_1", 42, False]
-        _do_log(three_elems_list, log_limit=log_limit, list_sample_size=2)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\r" "--[0]=value_1 [1]=42"
-        )
-
-        # Three elements, without element truncation.
-        _do_log(three_elems_list, log_limit=log_limit, list_sample_size=3)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 3; Sample:\r"
-            "--[0]=value_1 [1]=42 [2]=False"
-        )
-
-        # Two elements, with line truncation.
-        _do_log(["A" * 30, "B" * 30], log_limit=log_limit, list_sample_size=3)
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 2; Sample:\r"
-            "--[0]=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA [1]=BBBBBBBB…"
-        )
-
-    @patch("builtins.print")
-    def test_do_log_multiple_combinations(self, mock_print):
-        """
-        Test logging multiple dictionary scenarios.
-        """
-
-        # A dictionary containing a string, a number, a bool, a list and
-        # another dictionary.
-        # Key/value pairs are sorted in descending order by the length of the
-        # key added to the length of the value.
-        log_limit = 50
-        _do_log(
-            {
-                "key_1": "Foobar",
-                "key_2": 42,
-                "key_3": False,
-                "key_4": ["value_4_1", "value_4_2", "value_4_3"],
-                "key_5": {"key_5_1": "value_5_1", "key_5_2": 52},
-            },
-            log_limit=log_limit,
-        )
-        mock_print.assert_called_with(
-            "[TYPE: <class 'dict'>]; Key count = 5; Key/value pairs:\r"
-            + "--key_1=Foobar key_3=False key_2=42\r"
-            + "--key_4=[TYPE: <class 'list'>]; Size = 3; Sample:\r"
-            + "----[0]=value_4_1 [1]=value_4_2\r"
-            + "--key_5=[TYPE: <class 'dict'>]; Key count = 2; Key/v…\r"
-            + "----key_5_1=value_5_1 key_5_2=52"
-        )
-
-        # A list containing a string, a number, a bool, another list and a
-        # dictionary.
-        # Key/value pairs are sorted in descending order by the length of the
-        # key added to the length of the value.
-        my_list = [
-            "Foobar",
-            42,
-            False,
-            ["Barfoo", 256, True],
-            {"key_5_1": "value_5_1", "key_5_2": 52},
-        ]
-        _do_log(my_list, log_limit=log_limit, list_sample_size=len(my_list))
-        mock_print.assert_called_with(
-            "[TYPE: <class 'list'>]; Size = 5; Sample:\r"
-            "--Foobar\r"
-            "--42\r"
-            "--False\r"
-            "--[TYPE: <class 'list'>]; Size = 3; Sample:\r"
-            "----[0]=Barfoo [1]=256 [2]=True\r"
-            "--[TYPE: <class 'dict'>]; Key count = 2; Key/value pairs:\r"
-            "----key_5_1=value_5_1 key_5_2=52"
-        )
+        test_dict = {"key1": "value1", "key2": "value2"}
+        _do_log(test_dict, line_break_chars=" | ")
+        mock_print.assert_called_once_with('{"key1": "value1", "key2": "value2"}')
 
 
 class TestHttpRequest:
