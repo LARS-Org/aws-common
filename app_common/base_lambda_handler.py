@@ -469,7 +469,7 @@ class BaseLambdaHandler(ABC):
         if message_body is None:
             return None
         if not isinstance(message_body, str):
-            message_body = json.dumps(message_body, cls=app_utils.DecimalEncoder)
+            message_body = BaseLambdaHandler.json_dumps(message_body, indent=None)
 
         if verbose:
             BaseLambdaHandler.do_log(
@@ -507,7 +507,7 @@ class BaseLambdaHandler(ABC):
         _return = None
         if not isinstance(message, str):
             # If the message is not a string, convert it to JSON
-            message = json.dumps(message, cls=app_utils.DecimalEncoder)
+            message = BaseLambdaHandler.json_dumps(message, indent=None)
 
         if subject:
             _return = sns_client.publish(
@@ -553,10 +553,10 @@ class BaseLambdaHandler(ABC):
         lambda_client = boto3.client("lambda")
 
         # Ensure payload is a JSON string
-        if isinstance(payload, dict):
-            payload = json.dumps(payload, cls=app_utils.DecimalEncoder)
-        elif payload is not None and not isinstance(payload, str):
-            payload = json.dumps(payload)
+        if isinstance(payload, dict) or (
+            payload is not None and not isinstance(payload, str)
+        ):
+            payload = BaseLambdaHandler.json_dumps(payload, indent=None)
 
         # Set invocation type based on async_invoke
         invocation_type = "Event" if async_invoke else "RequestResponse"
@@ -698,4 +698,4 @@ class BaseLambdaHandler(ABC):
         """
         Utility method to serialize data to JSON, including Decimal values.
         """
-        return json.dumps(data, indent=indent, cls=cls)
+        return app_utils.json_dumps(data, indent=indent, cls=cls)
