@@ -216,9 +216,9 @@ class BaseLambdaHandler(ABC):
         Logs basic information about the lambda invocation, such as the
         `event`, `context` and `body` parameters received from AWS.
         """
-        self.do_log(self.event, title="*** Event")
-        self.do_log(self.context, title="*** Context")
-        self.do_log(self.body, title="*** Body")
+        self.do_log(self.event, title="*** Event", deep_limit=1)
+        self.do_log(self.context, title="*** Context", deep_limit=1)
+        self.do_log(self.body, title="*** Body", deep_limit=5)
 
     def __call__(self, event, context):
         """
@@ -524,11 +524,13 @@ class BaseLambdaHandler(ABC):
         return _return
 
     @staticmethod
-    def do_log(obj, title=None, line_len_limit=5000):
+    def do_log(obj, title=None, line_len_limit: int = 100, deep_limit: int = 3):
         """
         Wrapper function to call the do_log() function from the app_utils module.
         """
-        app_utils._do_log(obj, title=title, line_len_limit=line_len_limit)
+        app_utils._do_log(
+            obj, title=title, line_len_limit=line_len_limit, deep_limit=deep_limit
+        )
 
     @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
