@@ -90,25 +90,50 @@ def _do_log(
     deep_limit: int = 3,
 ):
     """
-    Logs an object to the console in a single entry,
-    truncating long values and handling nested structures.
+    Logs an object to the console in a single entry, truncating long values
+    and handling nested structures. Provides a clear, flat representation of
+    the object with truncated values for improved readability.
+
+    Args:
+        obj: The object to log. Can be a dict, list, or any other data type.
+        title (str, optional): A title to print before the log.
+        line_len_limit (int): Maximum length for any single value in the log.
+        line_break_chars (str): Characters to replace line breaks in the output.
+        list_sample_size (int): Number of list elements to display before truncating.
+        json_indent (int): Indentation level for JSON formatting.
+        deep_limit (int): Maximum depth for processing nested structures.
     """
 
     def truncate(value, limit):
-        """Truncates a string to the specified limit with ellipsis if needed."""
+        """
+        Truncates a string or value to the specified limit,
+        adding ellipsis if truncated.
+
+        Args:
+            value: The value to truncate. Can be a string, int, or float.
+            limit (int): Maximum length of the string.
+
+        Returns:
+            str: The truncated value as a string.
+        """
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             return value
         value = str(value)  # Ensure the input is a string
         if len(value) > limit:
-            truncated_value = value[:limit] + "..."
-            return truncated_value
-        # else: the value len is not above the limit
-        return value  # returning as is
+            return value[:limit] + "..."
+        return value
 
     def process(obj, deep=1):
         """
-        Recursively processes objects (dicts and lists) into
-        a flat representation with truncation.
+        Recursively processes objects (dicts and lists) into a flat
+        representation with truncation.
+
+        Args:
+            obj: The object to process (can be a dict, list, or other type).
+            deep (int): Current depth of recursion.
+
+        Returns:
+            The processed object with truncation applied.
         """
         if deep >= deep_limit:
             return truncate(obj, line_len_limit)
@@ -116,11 +141,10 @@ def _do_log(
         if isinstance(obj, dict):
             return {k: process(v, deep + 1) for k, v in obj.items()}
         elif isinstance(obj, list):
-            str_return = [process(v, deep + 1) for v in obj[:list_sample_size]]
+            truncated_list = [process(v, deep + 1) for v in obj[:list_sample_size]]
             if len(obj) > list_sample_size:
-                str_return.append(f"<...and {len(obj) - list_sample_size} more>")
-            return str_return
-        # else:
+                truncated_list.append(f"<...and {len(obj) - list_sample_size} more>")
+            return truncated_list
         return truncate(obj, line_len_limit)
 
     # Process the object
@@ -133,13 +157,14 @@ def _do_log(
     else:
         log_message = json_dumps(processed_obj, indent=json_indent)
 
-    # Print the log in a single entry
+    # Replace line breaks with the specified characters
     log_message = log_message.replace("\n", line_break_chars)
 
     # Print the title if provided
     if title:
         print(title)
 
+    # Print the formatted log message
     print(log_message)
 
 
@@ -173,7 +198,7 @@ def http_request(
         headers = headers or {}
         headers.setdefault("Content-Type", "application/json")
 
-    body = json.dumps(json_data) if json_data else None
+    body = json_dumps(json_data, indent=None) if json_data else None
 
     # Append query parameters to the URL if provided
     if params:
