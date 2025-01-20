@@ -70,11 +70,11 @@ sys.modules["app_utils_module"] = _UTILS_MODULE
 spec.loader.exec_module(_UTILS_MODULE)
 
 
-def _do_log(obj, title=None, log_limit: int = 150):
+def _do_log(obj, title=None, line_len_limit: int = 150):
     """
     Wrapper function to call the do_log function from the app_utils module.
     """
-    _UTILS_MODULE._do_log(obj, title=title, log_limit=log_limit)
+    _UTILS_MODULE._do_log(obj, title=title, line_len_limit=line_len_limit)
 
 
 def _run_command(command, cwd=None, shell=False):

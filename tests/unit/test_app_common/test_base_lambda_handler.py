@@ -616,13 +616,15 @@ class TestBaseLambdaHandler:
         """
         obj = {"key": "value"}
         title = "Test Title"
-        log_limit = 1000
+        line_len_limit = 1000
 
         # Call the method
-        self.handler.do_log(obj, title=title, log_limit=log_limit)
+        self.handler.do_log(obj, title=title, line_len_limit=line_len_limit)
 
         # Verify that the do_log function was called with the correct arguments
-        mock_do_log.assert_called_once_with(obj, title=title, log_limit=log_limit)
+        mock_do_log.assert_called_once_with(
+            obj, title=title, line_len_limit=line_len_limit
+        )
 
     @patch("boto3.client")
     @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
