@@ -308,9 +308,11 @@ class TestBaseLambdaHandler:
         self.handler._log_basic_info()
 
         # Verify that do_log was called with the correct parameters
-        mock_do_log.assert_any_call(self.handler.event, title="*** Event")
-        mock_do_log.assert_any_call(self.handler.context, title="*** Context")
-        mock_do_log.assert_any_call(self.handler.body, title="*** Body")
+        mock_do_log.assert_any_call(self.handler.event, title="*** Event", deep_limit=1)
+        mock_do_log.assert_any_call(
+            self.handler.context, title="*** Context", deep_limit=1
+        )
+        mock_do_log.assert_any_call(self.handler.body, title="*** Body", deep_limit=5)
 
     @patch("app_common.base_lambda_handler.BaseLambdaHandler.do_log")
     def test_call_method(self, mock_do_log):
@@ -332,9 +334,11 @@ class TestBaseLambdaHandler:
         assert self.handler.headers == {"header_key": "header_value"}
 
         # Verify that basic info was logged
-        mock_do_log.assert_any_call(self.handler.event, title="*** Event")
-        mock_do_log.assert_any_call(self.handler.context, title="*** Context")
-        mock_do_log.assert_any_call(self.handler.body, title="*** Body")
+        mock_do_log.assert_any_call(self.handler.event, title="*** Event", deep_limit=1)
+        mock_do_log.assert_any_call(
+            self.handler.context, title="*** Context", deep_limit=1
+        )
+        mock_do_log.assert_any_call(self.handler.body, title="*** Body", deep_limit=5)
 
         # Verify that _do_the_job was called
         assert response == self.handler.response(message="Job done")
