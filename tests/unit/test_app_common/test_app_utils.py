@@ -582,6 +582,34 @@ class TestDoLog:
             '"These instructions use markdown notation... \\n# Rol..."}'
         )
 
+    @patch("builtins.print")
+    def test_do_log_deep_dict(self, mock_print):
+        """
+        Test logging a deep dictionary.
+        """
+        line_len_limit = 50
+        _do_log(
+            {
+                "key_1": "Foobar",
+                "key_2": {
+                    "key_2_1": "value_2_1",
+                    "key_2_2": {
+                        "key_2_2_1": "value_2_2_1",
+                        "key_2_2_2": {
+                            "key_2_2_2_1": "value_2_2_2_1",
+                            "key_2_2_2_2": "value_2_2_2_2",
+                        },
+                    },
+                },
+            },
+            line_len_limit=line_len_limit,
+            json_indent=None,
+        )
+        mock_print.assert_called_with(
+            '{"key_1": "Foobar", "key_2": {"key_2_1": "value_2_1", "key_2_2": '
+            "\"{'key_2_2_1': 'value_2_2_1', 'key_2_2_2': {'key_2_...\"}}"
+        )
+
 
 class TestHttpRequest:
     @patch("urllib3.PoolManager")
