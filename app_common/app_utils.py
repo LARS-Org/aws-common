@@ -73,11 +73,20 @@ def is_numeric(x) -> bool:
         return False
 
 
+def json_dumps(data, indent=4, cls=DecimalEncoder) -> str:
+    """
+    Utility method to serialize data to JSON, including Decimal values.
+    """
+    return json.dumps(data, indent=indent, cls=cls)
+
+
 def _do_log(
     obj,
     title=None,
-    log_limit: int = 100,
+    line_len_limit: int = 100,
     line_break_chars: str = " ",
+    list_sample_size: int = 5,
+    json_indent: int = 4,
 ):
     """
     Logs an object to the console in a single entry,
@@ -86,13 +95,14 @@ def _do_log(
 
     def truncate(value, limit):
         """Truncates a string to the specified limit with ellipsis if needed."""
-        if not value or is_numeric(value):
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
             return value
         value = str(value)  # Ensure the input is a string
         if len(value) > limit:
             truncated_value = value[:limit] + "..."
             return truncated_value
-        return value
+        # else: the value len is not above the limit
+        return value  # returning as is
 
     def process(obj):
         """
@@ -102,22 +112,31 @@ def _do_log(
         if isinstance(obj, dict):
             return {k: process(v) for k, v in obj.items()}
         elif isinstance(obj, list):
-            return [process(v) for v in obj]
+            str_return = [process(v) for v in obj[:list_sample_size]]
+            if len(obj) > list_sample_size:
+                str_return.append(f"<...and {len(obj) - list_sample_size} more>")
+            return str_return
         else:
-            return truncate(obj, log_limit)
+            return truncate(obj, line_len_limit)
 
     # Process the object
     processed_obj = process(obj)
 
-    # Prepare the log message as a JSON string
-    log_message = json.dumps(processed_obj, indent=None)
-
-    # Prepend the title if provided
-    if title:
-        log_message = f"{title}: {log_message}"
+    # Prepare the log message as a JSON string, if necessary
+    log_message = ""
+    if isinstance(processed_obj, str):
+        log_message = processed_obj
+    else:
+        log_message = json_dumps(processed_obj, indent=json_indent)
 
     # Print the log in a single entry
-    print(log_message.replace("\n", line_break_chars))
+    log_message = log_message.replace("\n", line_break_chars)
+
+    # Print the title if provided
+    if title:
+        print(title)
+
+    print(log_message)
 
 
 def http_request(
