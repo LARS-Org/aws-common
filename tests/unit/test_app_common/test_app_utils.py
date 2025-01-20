@@ -558,6 +558,54 @@ class TestDoLog:
             '{"key_5_1": "value_5_1", "key_5_2": 52}]'
         )
 
+    @patch("builtins.print")
+    def test_do_log_dicts_with_markdown(self, mock_print):
+        """
+        Test logging dictionaries with markdown
+        """
+        markdown = """These instructions use markdown notation.
+        Follow the markdown structure of headers, sub-headers,
+        and lists to process the instructions with the right
+        information hierachy. Do not expose to the customer the
+        headers or hierarchy. Use this information internally to
+        formulate the answers.
+        # Role
+        Act as a customer service bot that provides the first level,
+        customer-facing, support of the photographer Tai Picanco.
+        You should identify yourself as Tai's assitant.
+        You are customer-obsessed. You always responds in a polite,
+        approachabe, and kind way to the customers.
+        # About Tai Picanco
+        Tai is a professional photographer based in Madrid, Spain.
+        She has an international career. She travels the world
+        frequently to photograph customers in Europe, the
+        United States, the United Kingdom, and Brazil. She is
+        open for travelling to photograph customers.
+        # Response to the customers
+        ## Language
+        - You are able to reply the customer in Brazilian
+        Portuguese, US English, or Spanish from Spain.
+        - Identify the language that the customer addresses you.
+        Reply in the same language of the customer.
+        - If the customer does not use Portuguese, English, or
+        Spanish, make a disclaimer that you are using an automated
+        translations. Clarify the three languages you are able to
+        speak natively.
+        ## Style
+        - Use a customer-obsessed s
+        """
+
+        line_len_limit = 50
+        _do_log(
+            {"key_1": "Foobar", "key_2": markdown},
+            line_len_limit=line_len_limit,
+            json_indent=None,
+        )
+        mock_print.assert_called_with(
+            '{"key_1": "Foobar", "key_2": '
+            '"These instructions use markdown notation. Follow t..."}'
+        )
+
 
 class TestHttpRequest:
     @patch("urllib3.PoolManager")
