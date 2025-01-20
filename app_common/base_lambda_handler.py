@@ -524,11 +524,11 @@ class BaseLambdaHandler(ABC):
         return _return
 
     @staticmethod
-    def do_log(obj, title=None, log_limit=5000):
+    def do_log(obj, title=None, line_len_limit=5000):
         """
         Wrapper function to call the do_log() function from the app_utils module.
         """
-        app_utils._do_log(obj, title=title, line_len_limit=log_limit)
+        app_utils._do_log(obj, title=title, line_len_limit=line_len_limit)
 
     @staticmethod
     def invoke_lambda(function_name, payload=None, async_invoke=False):
