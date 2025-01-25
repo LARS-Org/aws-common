@@ -11,11 +11,36 @@ from boto3.dynamodb.conditions import Key
 dynamodb = boto3.resource("dynamodb")
 
 
+def replace_dynamodb_resource(new_dynamodb_resource):
+    """
+    Replaces the global `dynamodb` resource with the given resource.
+    This is meant to be used mainly for testing purposes, e.g., to use a DynamoDB
+    Local instance instead of the default one provided by the AWS environment:
+
+    ```
+    new_dynamodb = boto3.resource("dynamodb", endpoint_url="http://localhost:8000")
+    replace_dynamodb_resource(new_dynamodb)
+    ```
+    """
+    global dynamodb
+    dynamodb = new_dynamodb_resource
+
+
 class DynamoDBBase:
     """Handles common operations for DynamoDB tables."""
 
     def __init__(self, table_name):
+        self._table_name = table_name
         self._table = dynamodb.Table(table_name)
+
+    def recreate_table_resource(self):
+        """
+        Recreates the `Table` resource of this instance through the global `dynamodb`
+        resource. This is meant to be used mainly for testing purposes, e.g., after
+        replacing the global `dynamodb` resource to point to a DynamoDB Local instance
+        instead of the default one provided by the AWS environment.
+        """
+        self._table = dynamodb.Table(self._table_name)
 
     def __convert_to_decimal(self, item):
         """
