@@ -6,6 +6,7 @@ import decimal
 import json
 import subprocess
 import sys
+import time
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -249,3 +250,11 @@ def run_command(command, cwd=None, shell=False):
 
     if result.returncode != 0:
         sys.exit(result.returncode)
+
+
+def unix_epoch_now() -> int:
+    """
+    Utility method to return the current timestamp,
+    considering the Unix Epoch reference.
+    """
+    return int(time.time())
