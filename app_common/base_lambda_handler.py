@@ -701,3 +701,9 @@ class BaseLambdaHandler(ABC):
         Utility method to serialize data to JSON, including Decimal values.
         """
         return app_utils.json_dumps(data, indent=indent, cls=cls)
+
+    def _get_path_parameter(self, name: str) -> str:
+        """
+        Extracts the path parameter from the event.
+        """
+        return self.event["pathParameters"][name]
