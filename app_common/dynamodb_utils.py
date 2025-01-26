@@ -8,12 +8,28 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key
 
+# A global resource used to interact with DynamoDB.
+# Whereas it can be used as is, you may want to replace or mock this resource for
+# development and testing purposes. In such scenarios, consider the following
+# alternatives:
+#
+# 1. You can replace this resource via the ``replace_dynamodb_resource()`` method,
+#    e.g.:
+#    ```
+#    new_dynamodb = boto3.resource("dynamodb", endpoint_url="http://localhost:8000")
+#    replace_dynamodb_resource(new_dynamodb)
+#    ```
+#
+# 2. You can mock this resource via the ``moto`` library to mock AWS services by
+#    annotating the relevant methods with ``@mock_aws``. See:
+#      https://pypi.org/project/moto/
+#      http://docs.getmoto.org/en/latest/docs/getting_started.html
 dynamodb = boto3.resource("dynamodb")
 
 
 def replace_dynamodb_resource(new_dynamodb_resource):
     """
-    Replaces the global `dynamodb` resource with the given resource.
+    Replaces the global ``dynamodb`` resource with the given resource.
     This is meant to be used mainly for testing purposes, e.g., to use a DynamoDB
     Local instance instead of the default one provided by the AWS environment:
 
@@ -26,6 +42,95 @@ def replace_dynamodb_resource(new_dynamodb_resource):
     dynamodb = new_dynamodb_resource
 
 
+def create_table_resource(
+    table_name: str,
+    partition_key_name: str,
+    partition_key_attribute_type: str,
+    sort_key_name: str,
+    sort_key_attribute_type: str,
+    global_secondary_index_name: str,
+    global_secondary_index_partition_key_name: str,
+    global_secondary_index_projection_type: str = "ALL",
+    table_read_capacity_units: int = 1,
+    table_write_capacity_units: int = 1,
+    global_secondary_index_read_capacity_units: int = 1,
+    global_secondary_index_write_capacity_units: int = 1,
+    **kwargs,
+):
+    """
+    Creates and returns a DynamoDB table resource via ``dynamodb.create_table()`` with
+    the given parameters.
+    This method is meant to be used mainly for testing purposes and is kept
+    deliberately simple. If you need more complex logic -- say, for example,
+    additional columns in ``AttributeDefinitions`` or multiple Global Secondary Indexes
+    --, consider invoking ``dynamodb.create_table()`` directly.
+    """
+
+    # Handles the simpler case where there is no Global Secondary Index
+    if not global_secondary_index_name:
+        return dynamodb.create_table(
+            TableName=table_name,
+            KeySchema=[
+                {"AttributeName": partition_key_name, "KeyType": "HASH"},
+                {"AttributeName": sort_key_name, "KeyType": "RANGE"},
+            ],
+            AttributeDefinitions=[
+                {
+                    "AttributeName": partition_key_name,
+                    "AttributeType": partition_key_attribute_type,
+                },
+                {
+                    "AttributeName": sort_key_name,
+                    "AttributeType": sort_key_attribute_type,
+                },
+            ],
+            ProvisionedThroughput={
+                "ReadCapacityUnits": table_read_capacity_units,
+                "WriteCapacityUnits": table_write_capacity_units,
+            },
+            **kwargs,
+        )
+
+    # Handles the more complex case where there is a Global Secondary Index
+    return dynamodb.create_table(
+        TableName=table_name,
+        KeySchema=[
+            {"AttributeName": partition_key_name, "KeyType": "HASH"},
+            {"AttributeName": sort_key_name, "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {
+                "AttributeName": partition_key_name,
+                "AttributeType": partition_key_attribute_type,
+            },
+            {"AttributeName": sort_key_name, "AttributeType": sort_key_attribute_type},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": global_secondary_index_name,
+                "KeySchema": [
+                    {
+                        "AttributeName": global_secondary_index_partition_key_name,
+                        "KeyType": "HASH",
+                    },
+                ],
+                "Projection": {
+                    "ProjectionType": global_secondary_index_projection_type,
+                },
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": global_secondary_index_read_capacity_units,
+                    "WriteCapacityUnits": global_secondary_index_write_capacity_units,
+                },
+            },
+        ],
+        ProvisionedThroughput={
+            "ReadCapacityUnits": table_read_capacity_units,
+            "WriteCapacityUnits": table_write_capacity_units,
+        },
+        **kwargs,
+    )
+
+
 class DynamoDBBase:
     """Handles common operations for DynamoDB tables."""
 
@@ -35,10 +140,10 @@ class DynamoDBBase:
 
     def recreate_table_resource(self):
         """
-        Recreates the `Table` resource of this instance through the global `dynamodb`
-        resource. This is meant to be used mainly for testing purposes, e.g., after
-        replacing the global `dynamodb` resource to point to a DynamoDB Local instance
-        instead of the default one provided by the AWS environment.
+        Recreates the ``Table`` resource of this instance through the global
+        ``dynamodb`` resource. This is meant to be used mainly for testing purposes,
+        e.g., after replacing the global ``dynamodb`` resource to point to a DynamoDB
+        Local instance instead of the default one provided by the AWS environment.
         """
         self._table = dynamodb.Table(self._table_name)
 
