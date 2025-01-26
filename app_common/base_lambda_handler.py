@@ -702,8 +702,8 @@ class BaseLambdaHandler(ABC):
         """
         return app_utils.json_dumps(data, indent=indent, cls=cls)
 
-    def _get_path_parameter(self, name: str) -> str:
+    def _get_path_parameter(self, parameter_name: str) -> str:
         """
-        Extracts the path parameter from the event.
+        Extracts the path parameter with the given name from the event dictionary.
         """
-        return self.event["pathParameters"][name]
+        return self.event["pathParameters"][parameter_name]
