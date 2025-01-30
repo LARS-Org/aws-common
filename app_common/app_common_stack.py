@@ -7,6 +7,7 @@ This can be used as a base class for other utility features to be added to a sta
 
 import jsii
 from aws_cdk import Aspects, Duration, IAspect, RemovalPolicy, Stack
+from aws_cdk import aws_apigateway as apigw
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_events as events
 from aws_cdk import aws_iam as iam
@@ -328,3 +329,83 @@ class AppCommonStack(Stack):
         """Imports an existing SNS topic by name."""
         topic_arn = f"arn:aws:sns:{self.region}:{self.account}:{topic_name}"
         return sns.Topic.from_topic_arn(self, topic_name, topic_arn)
+
+    def _create_request_authorizer(
+        self,
+        authorizer_id: str,
+        lambda_function: _lambda.Function,
+        header_names: list[str] | None,
+        context_values: list[str] | None,
+        query_strings: list[str] | None,
+        stage_variables: list[str] | None,
+        human_friendly_authorizer_name: str | None,
+        results_cache_ttl: None | int = 0,  # 0 = disables authorization caching
+        **kwargs,
+    ) -> apigw.RequestAuthorizer:
+        """
+        Creates an API Gateway Lambda authorizer where the full context of a request
+        (e.g., headers, query string parameters, stage variables) can be used for
+        request authorization. This is the preferred way to create API Gateway
+        authorizers.
+        """
+
+        identity_sources = []
+
+        if header_names:
+            identity_sources.extend(
+                [apigw.IdentitySource.header(x) for x in header_names]
+            )
+        if context_values:
+            identity_sources.append(
+                [apigw.IdentitySource.context(x) for x in context_values]
+            )
+        if query_strings:
+            identity_sources.append(
+                [apigw.IdentitySource.query_string(x) for x in query_strings]
+            )
+        if stage_variables:
+            identity_sources.append(
+                [apigw.IdentitySource.stage_variable(x) for x in stage_variables]
+            )
+
+        authorizer = apigw.RequestAuthorizer(
+            self,
+            authorizer_id,
+            handler=lambda_function,
+            identity_sources=identity_sources,
+            authorizer_name=human_friendly_authorizer_name,
+            results_cache_ttl=results_cache_ttl,
+            **kwargs,
+        )
+
+        self.do_log(f"Created RequestAuthorizer {authorizer_id}")
+
+        return authorizer
+
+    def _create_token_authorizer(
+        self,
+        authorizer_id: str,
+        lambda_function: _lambda.Function,
+        identity_source: str | None,
+        human_friendly_authorizer_name: str | None,
+        results_cache_ttl: None | int = 0,  # 0 = disables authorization caching
+        **kwargs,
+    ) -> apigw.TokenAuthorizer:
+        """
+        Creates an API Gateway Lambda authorizer where only a single header containing
+        an authorization token is used for request authorization.
+        """
+
+        authorizer = apigw.TokenAuthorizer(
+            self,
+            authorizer_id,
+            handler=lambda_function,
+            identity_source=identity_source,
+            authorizer_name=human_friendly_authorizer_name,
+            results_cache_ttl=results_cache_ttl,
+            **kwargs,
+        )
+
+        self.do_log(f"Created TokenAuthorizer {authorizer_id}")
+
+        return authorizer
