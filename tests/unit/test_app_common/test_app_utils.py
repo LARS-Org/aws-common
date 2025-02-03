@@ -13,6 +13,7 @@ from app_common.app_utils import (
     get_first_non_none,
     http_request,
     is_numeric,
+    json_dumps,
     run_command,
     str_is_none_or_empty,
 )
@@ -842,3 +843,30 @@ class TestRunCommand:
         mock_subprocess_run.assert_called_once_with(
             "echo Hello World", shell=True, cwd=None
         )
+
+
+class TestJsonDumps:
+    """
+    Test cases for the json_dumps function.
+
+    The json_dumps function is a wrapper around json.dumps that provides consistent
+    default parameters and handles encoding of special characters.
+    """
+
+    def test_json_dumps_ensure_ascii_false(self):
+        """
+        Test json_dumps with ensure_ascii set to False
+        """
+        data = {"key": "value", "unicode": "café"}
+        json_data = json_dumps(data, indent=None, ensure_ascii=False)
+        expected_json = '{"key": "value", "unicode": "café"}'
+        assert json_data == expected_json
+
+    def test_json_dumps_ensure_ascii_true(self):
+        """
+        Test json_dumps with ensure_ascii set to True
+        """
+        data = {"key": "value", "unicode": "café"}
+        json_data = json_dumps(data, indent=None)
+        expected_json = '{"key": "value", "unicode": "caf\\u00e9"}'
+        assert json_data == expected_json

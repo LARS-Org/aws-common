@@ -696,11 +696,11 @@ class BaseLambdaHandler(ABC):
         return boto3.client("ssm")
 
     @staticmethod
-    def json_dumps(data, indent=4, cls=app_utils.DecimalEncoder) -> str:
+    def json_dumps(data, indent=4, cls=app_utils.DecimalEncoder, **kwargs) -> str:
         """
         Utility method to serialize data to JSON, including Decimal values.
         """
-        return app_utils.json_dumps(data, indent=indent, cls=cls)
+        return app_utils.json_dumps(data, indent=indent, cls=cls, **kwargs)
 
     def _get_path_parameter(self, parameter_name: str) -> str:
         """

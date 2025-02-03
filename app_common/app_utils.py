@@ -74,11 +74,11 @@ def is_numeric(x) -> bool:
         return False
 
 
-def json_dumps(data, indent=4, cls=DecimalEncoder) -> str:
+def json_dumps(data, indent=4, cls=DecimalEncoder, **kwargs) -> str:
     """
     Utility method to serialize data to JSON, including Decimal values.
     """
-    return json.dumps(data, indent=indent, cls=cls)
+    return json.dumps(data, indent=indent, cls=cls, **kwargs)
 
 
 def _do_log(
