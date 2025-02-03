@@ -334,12 +334,14 @@ class AppCommonStack(Stack):
         self,
         authorizer_id: str,
         lambda_function: _lambda.Function,
-        header_names: list[str] | None,
-        context_values: list[str] | None,
-        query_strings: list[str] | None,
-        stage_variables: list[str] | None,
-        human_friendly_authorizer_name: str | None,
-        results_cache_ttl: None | int = 0,  # 0 = disables authorization caching
+        header_names: list[str] | None = None,
+        context_values: list[str] | None = None,
+        query_strings: list[str] | None = None,
+        stage_variables: list[str] | None = None,
+        human_friendly_authorizer_name: str | None = None,
+        # Time-to-live for the authorization result cache, in seconds.
+        # A value of 0 disables authorization caching.
+        results_cache_ttl: None | int = 0,
         **kwargs,
     ) -> apigw.RequestAuthorizer:
         """
@@ -368,6 +370,10 @@ class AppCommonStack(Stack):
                 [apigw.IdentitySource.stage_variable(x) for x in stage_variables]
             )
 
+        results_cache_ttl = (
+            Duration.seconds(results_cache_ttl) if results_cache_ttl else None
+        )
+
         authorizer = apigw.RequestAuthorizer(
             self,
             authorizer_id,
@@ -386,15 +392,21 @@ class AppCommonStack(Stack):
         self,
         authorizer_id: str,
         lambda_function: _lambda.Function,
-        identity_source: str | None,
-        human_friendly_authorizer_name: str | None,
-        results_cache_ttl: None | int = 0,  # 0 = disables authorization caching
+        identity_source: str | None = None,
+        human_friendly_authorizer_name: str | None = None,
+        # Time-to-live for the authorization result cache, in seconds.
+        # A value of 0 disables authorization caching.
+        results_cache_ttl: None | int = 0,
         **kwargs,
     ) -> apigw.TokenAuthorizer:
         """
         Creates an API Gateway Lambda authorizer where only a single header containing
         an authorization token is used for request authorization.
         """
+
+        results_cache_ttl = (
+            Duration.seconds(results_cache_ttl) if results_cache_ttl else None
+        )
 
         authorizer = apigw.TokenAuthorizer(
             self,
