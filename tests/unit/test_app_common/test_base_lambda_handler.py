@@ -831,3 +831,30 @@ class TestBaseLambdaHandler:
         without a default value.
         """
         assert self.handler.get_env_var("NON_EXISTENT_VAR") is None
+
+
+class TestJsonDumpsInBaseLambdaHandler:
+    """
+    Test cases for the json_dumps function in BaseLambdaHandler.
+
+    The json_dumps function is a wrapper around json.dumps that provides consistent
+    default parameters and handles encoding of special characters.
+    """
+
+    def test_json_dumps_ensure_ascii_false(self):
+        """
+        Test json_dumps with ensure_ascii set to False
+        """
+        data = {"key": "value", "unicode": "café"}
+        json_data = BaseLambdaHandler.json_dumps(data, indent=None, ensure_ascii=False)
+        expected_json = '{"key": "value", "unicode": "café"}'
+        assert json_data == expected_json
+
+    def test_json_dumps_ensure_ascii_true(self):
+        """
+        Test json_dumps with ensure_ascii set to True
+        """
+        data = {"key": "value", "unicode": "café"}
+        json_data = BaseLambdaHandler.json_dumps(data, indent=None)
+        expected_json = '{"key": "value", "unicode": "caf\\u00e9"}'
+        assert json_data == expected_json
