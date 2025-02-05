@@ -54,7 +54,7 @@ def get_fake_aws_lambda_context() -> dict:
     }
 
 
-def get_basic_aws_lambda_event(body: str | None = "") -> dict:
+def get_basic_aws_lambda_event(body) -> dict:
     """
     Returns a dictionary containing basic values for an AWS Lambda event.
     The keys present in the result dictionary are "body", whose value can be
