@@ -339,9 +339,11 @@ class AppCommonStack(Stack):
         query_strings: list[str] | None = None,
         stage_variables: list[str] | None = None,
         human_friendly_authorizer_name: str | None = None,
-        # Time-to-live for the authorization result cache, in seconds.
+        # Time-to-live for the authorization result cache.
+        # If it is specified as an int, it will be interpreted as a Duration in
+        # seconds.
         # A value of 0 disables authorization caching.
-        results_cache_ttl: None | int = 0,
+        results_cache_ttl=None,
         **kwargs,
     ) -> apigw.RequestAuthorizer:
         """
@@ -370,9 +372,8 @@ class AppCommonStack(Stack):
                 [apigw.IdentitySource.stage_variable(x) for x in stage_variables]
             )
 
-        results_cache_ttl = (
-            Duration.seconds(results_cache_ttl) if results_cache_ttl else None
-        )
+        if isinstance(results_cache_ttl, int):
+            results_cache_ttl = Duration.seconds(results_cache_ttl)
 
         authorizer = apigw.RequestAuthorizer(
             self,
@@ -394,9 +395,11 @@ class AppCommonStack(Stack):
         lambda_function: _lambda.Function,
         identity_source: str | None = None,
         human_friendly_authorizer_name: str | None = None,
-        # Time-to-live for the authorization result cache, in seconds.
+        # Time-to-live for the authorization result cache.
+        # If it is specified as an int, it will be interpreted as a Duration in
+        # seconds.
         # A value of 0 disables authorization caching.
-        results_cache_ttl: None | int = 0,
+        results_cache_ttl=None,
         **kwargs,
     ) -> apigw.TokenAuthorizer:
         """
@@ -404,9 +407,8 @@ class AppCommonStack(Stack):
         an authorization token is used for request authorization.
         """
 
-        results_cache_ttl = (
-            Duration.seconds(results_cache_ttl) if results_cache_ttl else None
-        )
+        if isinstance(results_cache_ttl, int):
+            results_cache_ttl = Duration.seconds(results_cache_ttl)
 
         authorizer = apigw.TokenAuthorizer(
             self,

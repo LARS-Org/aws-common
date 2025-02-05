@@ -2,12 +2,14 @@
 A module that contains utility functions to be used in API Gateway-related tasks.
 """
 
-EXECUTE_API_INVOKE_ACTION = "execute-api:Invoke"
+ACTION_EXECUTE_API_INVOKE = "execute-api:Invoke"
+EFFECT_ALLOW = "Allow"
+EFFECT_DENY = "Deny"
 
 
 def generate_auth_response_as_iam_policy(
     principal_id,
-    action=EXECUTE_API_INVOKE_ACTION,
+    action=ACTION_EXECUTE_API_INVOKE,
     effect="",
     resource="",
     response_context: dict | None = None,
@@ -49,7 +51,7 @@ def generate_auth_response_as_iam_policy(
 
 def generate_allow_auth_response(
     principal_id,
-    action=EXECUTE_API_INVOKE_ACTION,
+    action=ACTION_EXECUTE_API_INVOKE,
     resource="",
     response_context: dict | None = None,
 ):
@@ -60,13 +62,13 @@ def generate_allow_auth_response(
     """
 
     return generate_auth_response_as_iam_policy(
-        principal_id, action, "Allow", resource, response_context
+        principal_id, action, EFFECT_ALLOW, resource, response_context
     )
 
 
 def generate_deny_auth_response(
     principal_id,
-    action=EXECUTE_API_INVOKE_ACTION,
+    action=ACTION_EXECUTE_API_INVOKE,
     resource="",
     response_context: dict | None = None,
 ):
@@ -77,5 +79,5 @@ def generate_deny_auth_response(
     """
 
     return generate_auth_response_as_iam_policy(
-        principal_id, action, "Deny", resource, response_context
+        principal_id, action, EFFECT_DENY, resource, response_context
     )
