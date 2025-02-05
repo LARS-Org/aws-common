@@ -77,11 +77,11 @@ def _do_log(obj, title=None, line_len_limit: int = 150):
     _UTILS_MODULE._do_log(obj, title=title, line_len_limit=line_len_limit)
 
 
-def _run_command(command, cwd=None, shell=False):
+def _run_command(command, cwd=None, shell=False, check=True, **kwargs):
     """
     Wrapper function to call the run_command function from the app_utils module.
     """
-    _UTILS_MODULE.run_command(command, cwd=cwd, shell=shell)
+    _UTILS_MODULE.run_command(command, cwd=cwd, shell=shell, check=check, **kwargs)
 
 
 def main():

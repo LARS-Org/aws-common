@@ -5,6 +5,9 @@ import shutil
 
 # The directory where the Python virtual environment is stored
 PYTHON_VENV_DIR = "venv"
+if os.getenv("AWS_COMMON_PYTHON_VENV_DIR"):
+    PYTHON_VENV_DIR = os.getenv("AWS_COMMON_PYTHON_VENV_DIR")
+    print(f"Using Python virtual environment directory: {PYTHON_VENV_DIR}")
 
 
 def do_reset_venv(do_log_func, run_cmd_func):
