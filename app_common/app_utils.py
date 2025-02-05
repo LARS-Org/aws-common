@@ -231,7 +231,7 @@ def http_request(
     }
 
 
-def run_command(command, cwd=None, shell=False):
+def run_command(command, cwd=None, shell=False, check=True, **kwargs):
     """
     Run a shell command in the specified directory.
 
@@ -246,7 +246,7 @@ def run_command(command, cwd=None, shell=False):
     elif isinstance(command, str):
         command = command.replace("python3.11", sys.executable)
 
-    result = subprocess.run(command, shell=shell, cwd=cwd)
+    result = subprocess.run(command, shell=shell, cwd=cwd, check=check, **kwargs)
 
     if result.returncode != 0:
         sys.exit(result.returncode)
