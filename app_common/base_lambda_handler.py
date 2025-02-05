@@ -220,7 +220,7 @@ class BaseLambdaHandler(ABC):
         self.do_log(self.context, title="*** Context", deep_limit=1)
         self.do_log(self.body, title="*** Body", deep_limit=5)
 
-    def __call__(self, event, context):
+    def __call__(self, event, context, return_raw_job_return: bool = False):
         """
         Performs all the tasks required to service a lambda function
         invocation, as follows:
@@ -251,6 +251,9 @@ class BaseLambdaHandler(ABC):
         job_return = self._do_the_job()
 
         self.do_log("** Finishing the lambda execution")
+
+        if return_raw_job_return:
+            return job_return
 
         if isinstance(job_return, dict) and "statusCode" in job_return:
             # If the return is a response object, return it
