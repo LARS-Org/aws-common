@@ -772,7 +772,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command(["echo", "Hello World"])
         mock_subprocess_run.assert_called_once_with(
-            ["echo", "Hello World"], shell=False, cwd=None
+            ["echo", "Hello World"], shell=False, cwd=None, check=True
         )
 
     @patch("subprocess.run")
@@ -784,7 +784,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 1
         run_command(["invalid_command"])
         mock_subprocess_run.assert_called_once_with(
-            ["invalid_command"], shell=False, cwd=None
+            ["invalid_command"], shell=False, cwd=None, check=True
         )
         mock_sys_exit.assert_called_once_with(1)
 
@@ -796,7 +796,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command(["echo Hello World"], shell=True)
         mock_subprocess_run.assert_called_once_with(
-            ["echo Hello World"], shell=True, cwd=None
+            ["echo Hello World"], shell=True, cwd=None, check=True
         )
 
     @patch("subprocess.run")
@@ -807,7 +807,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command(["ls"], cwd="/home/user")
         mock_subprocess_run.assert_called_once_with(
-            ["ls"], shell=False, cwd="/home/user"
+            ["ls"], shell=False, cwd="/home/user", check=True
         )
 
     @patch("subprocess.run")
@@ -818,7 +818,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command(["python3.11", "--version"])
         mock_subprocess_run.assert_called_once_with(
-            [sys.executable, "--version"], shell=False, cwd=None
+            [sys.executable, "--version"], shell=False, cwd=None, check=True
         )
 
     @patch("subprocess.run")
@@ -830,7 +830,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command("python3.11 --version", shell=True)
         mock_subprocess_run.assert_called_once_with(
-            f"{sys.executable} --version", shell=True, cwd=None
+            f"{sys.executable} --version", shell=True, cwd=None, check=True
         )
 
     @patch("subprocess.run")
@@ -841,7 +841,7 @@ class TestRunCommand:
         mock_subprocess_run.return_value.returncode = 0
         run_command("echo Hello World", shell=True)
         mock_subprocess_run.assert_called_once_with(
-            "echo Hello World", shell=True, cwd=None
+            "echo Hello World", shell=True, cwd=None, check=True
         )
 
 
