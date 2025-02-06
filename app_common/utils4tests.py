@@ -8,6 +8,9 @@ import os
 CONTENT_TYPE = "Content-Type"
 APPLICATION_JSON = "application/json"
 
+LAMBDA_AUTH_EVENT_TYPE_REQUEST = "REQUEST"
+LAMBDA_AUTH_EVENT_TYPE_TOKEN = "TOKEN"
+
 
 def set_aws_environment_variables(
     aws_access_key_id: str,
@@ -54,7 +57,7 @@ def get_fake_aws_lambda_context() -> dict:
     }
 
 
-def get_basic_aws_lambda_event(body) -> dict:
+def get_basic_aws_lambda_event(body=None) -> dict:
     """
     Returns a dictionary containing basic values for an AWS Lambda event.
     The keys present in the result dictionary are "body", whose value can be
@@ -64,4 +67,64 @@ def get_basic_aws_lambda_event(body) -> dict:
     return {
         "body": body,
         "headers": {CONTENT_TYPE: APPLICATION_JSON},
+    }
+
+
+def get_aws_lambda_event_for_request_authorizer(
+    method_arn="",
+    resource="/",
+    path="/",
+    http_method="GET",
+    headers: dict = None,
+    multi_value_headers: dict = None,
+    query_string_parameters: dict = None,
+    multi_value_query_string_parameters: dict = None,
+    path_parameters: dict = None,
+    stage_variables: dict = None,
+) -> dict:
+    """
+    Returns a dictionary with the typical structure of an event received by a
+    request-based Lambda authorizer. This is meant to be used mainly for testing
+    purposes.
+    """
+    if headers is None:
+        headers = {}
+    if multi_value_headers is None:
+        multi_value_headers = {}
+    if query_string_parameters is None:
+        query_string_parameters = {}
+    if multi_value_query_string_parameters is None:
+        multi_value_query_string_parameters = {}
+    if path_parameters is None:
+        path_parameters = {}
+    if stage_variables is None:
+        stage_variables = {}
+
+    return {
+        "type": LAMBDA_AUTH_EVENT_TYPE_REQUEST,
+        "methodArn": method_arn,
+        "resource": resource,
+        "path": path,
+        "httpMethod": http_method,
+        "headers": headers,
+        "multiValueHeaders": multi_value_headers,
+        "queryStringParameters": query_string_parameters,
+        "multiValueQueryStringParameters": multi_value_query_string_parameters,
+        "pathParameters": path_parameters,
+        "stageVariables": stage_variables,
+    }
+
+
+def get_aws_lambda_event_for_token_authorizer(
+    method_arn="", authorization_token=""
+) -> dict:
+    """
+    Returns a dictionary with the typical structure of an event received by a
+    token-based Lambda authorizer. This is meant to be used mainly for testing
+    purposes.
+    """
+    return {
+        "type": LAMBDA_AUTH_EVENT_TYPE_TOKEN,
+        "methodArn": method_arn,
+        "authorizationToken": authorization_token,
     }
