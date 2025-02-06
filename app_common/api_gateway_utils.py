@@ -2,9 +2,16 @@
 A module that contains utility functions to be used in API Gateway-related tasks.
 """
 
+# Constants for export
 ACTION_EXECUTE_API_INVOKE = "execute-api:Invoke"
 EFFECT_ALLOW = "Allow"
 EFFECT_DENY = "Deny"
+
+PRINCIPAL_ID = "principalId"
+POLICY_DOCUMENT = "policyDocument"
+ACTION = "Action"
+EFFECT = "Effect"
+RESOURCE = "Resource"
 
 
 def generate_auth_response_as_iam_policy(
