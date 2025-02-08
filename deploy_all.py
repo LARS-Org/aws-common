@@ -119,7 +119,7 @@ def deploy_module(module_path):
         return False
 
     # Recreate the Python virtual environment using the app_setup.py script
-    command = "python3.11 app_setup.py setup"
+    command = "python3.11 app_setup.py setup --ignore_central_venv"
     if not run_command(command, cwd=module_path, shell=True):
         print(f"Failed to recreate virtual environment in {module_path}, skipping...")
         return False

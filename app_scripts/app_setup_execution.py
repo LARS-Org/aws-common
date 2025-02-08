@@ -42,6 +42,12 @@ MENU_DEPLOY_OPTIONS = {
 MENU_FAST_DEPLOY_OPTIONS = {"fast_deploy", "--fast_deploy"}
 MENU_HELP_OPTIONS = {"--help", "-h", "help"}
 MENU_TEST_OPTIONS = {"run_tests", "--run_tests", "test", "--test", "tests", "--tests"}
+MENU_IGNORE_CENTRAL_VENV_OPTIONS = {
+    "--ignore_central_venv",
+    "ignore_central_venv",
+    "--no_central_venv",
+    "no_central_venv",
+}
 MENU_OPTIONS = (
     MENU_VENV_OPTIONS
     | MENU_INSTALL_OPTIONS
@@ -49,6 +55,7 @@ MENU_OPTIONS = (
     | MENU_FAST_DEPLOY_OPTIONS
     | MENU_HELP_OPTIONS
     | MENU_TEST_OPTIONS
+    | MENU_IGNORE_CENTRAL_VENV_OPTIONS
 )
 
 # getting the project root directory
@@ -91,15 +98,23 @@ def main():
     error_msg_args = (
         "Usage: app_setup.py --<setup_venv|install_requirements|deploy|run_tests>"
     )
-    if len(sys.argv) != 4:
+
+    # Check if the number of arguments is valid
+    if len(sys.argv) not in [4, 5]:  # 5 when --ignore_central_venv is present
         _do_log(error_msg_args)
         sys.exit(1)
 
     action = sys.argv[1]
 
+    # Check for the ignore_central_venv option
+    ignore_central_venv = False
+    if len(sys.argv) == 5 and sys.argv[2] in MENU_IGNORE_CENTRAL_VENV_OPTIONS:
+        _do_log("Ignoring any central venv config.")
+        ignore_central_venv = True
+
     # Map action to corresponding function
     if action in MENU_VENV_OPTIONS:
-        do_reset_venv(_do_log, _run_command)
+        do_reset_venv(_do_log, _run_command, ignore_central_venv)
         # it will be commented while we don't solve the issue with the venv activation
         # install_requirements(execution_dir=caller_dir, script_dir=current_dir)
     elif action in MENU_INSTALL_OPTIONS:
