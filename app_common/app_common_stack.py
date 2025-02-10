@@ -423,3 +423,32 @@ class AppCommonStack(Stack):
         self.do_log(f"Created TokenAuthorizer {authorizer_id}")
 
         return authorizer
+
+    @staticmethod
+    def get_permissive_cors_preflight_options() -> dict:
+        """
+        Returns a dictionary with permissive configuration options that, when supplied
+        to `aws_cdk.aws_apigateway.RestApi(default_cors_preflight_options={...})`,
+        enable CORS in such a way that API endpoints protected by an AWS resource
+        authorizer can be accessed through a web browser.
+        """
+
+        return {
+            "allow_origins": apigw.Cors.ALL_ORIGINS,
+            "allow_methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+            ],
+            "allow_headers": [
+                "Content-Type",
+                "Authorization",
+                "X-Amz-Date",
+                "X-Api-Key",
+                "X-Amz-Security-Token",
+                "X-Amz-User-Agent",
+            ],
+            "status_code": 200,
+        }
