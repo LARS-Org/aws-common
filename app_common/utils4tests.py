@@ -18,6 +18,7 @@ def set_aws_environment_variables(
     aws_security_token: str,
     aws_session_token: str,
     aws_default_region: str = "us-east-1",
+    **kwargs,
 ):
     """
     Sets some environment variables used by AWS.
@@ -28,8 +29,11 @@ def set_aws_environment_variables(
     os.environ["AWS_SESSION_TOKEN"] = aws_session_token
     os.environ["AWS_DEFAULT_REGION"] = aws_default_region
 
+    if kwargs:
+        os.environ.update(kwargs)
 
-def set_fake_aws_environment_variables(aws_default_region: str = "us-east-1"):
+
+def set_fake_aws_environment_variables(aws_default_region: str = "us-east-1", **kwargs):
     """
     Sets some environment variables used by AWS with fake values.
     This is meant to be used mainly for testing purposes, as some resources provided
@@ -37,7 +41,7 @@ def set_fake_aws_environment_variables(aws_default_region: str = "us-east-1"):
     are empty.
     """
     set_aws_environment_variables(
-        "testing", "testing", "testing", "testing", aws_default_region
+        "testing", "testing", "testing", "testing", aws_default_region, **kwargs
     )
 
 
@@ -57,7 +61,7 @@ def get_fake_aws_lambda_context() -> dict:
     }
 
 
-def get_basic_aws_lambda_event(body=None) -> dict:
+def get_basic_aws_lambda_event(body=None, **kwargs) -> dict:
     """
     Returns a dictionary containing basic values for an AWS Lambda event.
     The keys present in the result dictionary are "body", whose value can be
@@ -67,6 +71,7 @@ def get_basic_aws_lambda_event(body=None) -> dict:
     return {
         "body": body,
         "headers": {CONTENT_TYPE: APPLICATION_JSON},
+        **kwargs,
     }
 
 
@@ -81,6 +86,7 @@ def get_aws_lambda_event_for_request_authorizer(
     multi_value_query_string_parameters: dict = None,
     path_parameters: dict = None,
     stage_variables: dict = None,
+    **kwargs,
 ) -> dict:
     """
     Returns a dictionary with the typical structure of an event received by a
@@ -112,11 +118,14 @@ def get_aws_lambda_event_for_request_authorizer(
         "multiValueQueryStringParameters": multi_value_query_string_parameters,
         "pathParameters": path_parameters,
         "stageVariables": stage_variables,
+        **kwargs,
     }
 
 
 def get_aws_lambda_event_for_token_authorizer(
-    method_arn="", authorization_token=""
+    method_arn="",
+    authorization_token="",
+    **kwargs,
 ) -> dict:
     """
     Returns a dictionary with the typical structure of an event received by a
@@ -127,4 +136,5 @@ def get_aws_lambda_event_for_token_authorizer(
         "type": LAMBDA_AUTH_EVENT_TYPE_TOKEN,
         "methodArn": method_arn,
         "authorizationToken": authorization_token,
+        **kwargs,
     }
