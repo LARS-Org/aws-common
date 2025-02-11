@@ -299,3 +299,17 @@ class DynamoDBBase:
         self._table.delete_item(
             Key={primary_key_name: primary_key_value, sort_key_name: sort_key_value}
         )
+
+    def scan(self, **kwargs):
+        """
+        Scans the DynamoDB table with optional filter expressions and other parameters.
+
+        Args:
+            **kwargs: Additional parameters for the scan operation, such as
+                      FilterExpression, ExpressionAttributeValues, etc.
+
+        Returns:
+            list: A list of items returned by the scan operation.
+        """
+        response = self._table.scan(**kwargs)
+        return response.get("Items", [])
