@@ -258,3 +258,11 @@ def unix_epoch_now() -> int:
     considering the Unix Epoch reference.
     """
     return int(time.time())
+
+
+def get_auth_bearer_header(auth_token="") -> dict:
+    """
+    Returns a dictionary containing a typical `Authorization` header associated to a
+    `Bearer` token.
+    """
+    return {"Authorization": f"Bearer {auth_token}"}
