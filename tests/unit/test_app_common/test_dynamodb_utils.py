@@ -370,7 +370,7 @@ class TestDynamoDBBase(TestCase):
 
         # Delete the item from DynamoDB
         # self.dynamodb_base._del_by_keys(
-        #    primary_key_name="id", primary_key_value="123", sort_key="abc"
+        #    partition_key_name="id", partition_key_value="123", sort_key="abc"
         # )
         self.dynamodb_base._del_by_keys("id", "123", "sort_key", "abc")
 
