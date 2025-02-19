@@ -48,8 +48,8 @@ def create_table_resource(
     partition_key_attribute_type: str,
     sort_key_name: str,
     sort_key_attribute_type: str,
-    global_secondary_index_name: str,
-    global_secondary_index_partition_key_name: str,
+    global_secondary_index_name: str = None,
+    global_secondary_index_partition_key_name: str = None,
     global_secondary_index_projection_type: str = "ALL",
     table_read_capacity_units: int = 1,
     table_write_capacity_units: int = 1,
@@ -212,8 +212,8 @@ class DynamoDBBase:
 
     def _get_by_keys(
         self,
-        primary_key_name,
-        primary_key_value,
+        partition_key_name,
+        partition_key_value,
         sort_key_name=None,
         sort_key_value=None,
         index_name=None,
@@ -221,15 +221,15 @@ class DynamoDBBase:
         limit=None,
     ):
         """
-        Retrieves items by primary key and optional sort key.
+        Retrieves items by partition key and optional sort key.
 
-        - Use query instead of scan for better performance when only primary
+        - Use query instead of scan for better performance when only partition
           key is provided.
         - Ensure that your table's key design and indexes support your query patterns
           for efficiency.
         """
-        # Start with the primary key condition
-        key_condition = Key(primary_key_name).eq(primary_key_value)
+        # Start with the partition key condition
+        key_condition = Key(partition_key_name).eq(partition_key_value)
 
         # If a sort key is provided, add it to the condition
         if sort_key_name and sort_key_value:
@@ -262,7 +262,9 @@ class DynamoDBBase:
                 pk_value (str): The value of the partition key.
         Returns: list: A list of items matching the given partition key.
         """
-        return self._get_by_keys(primary_key_name=pk_name, primary_key_value=pk_value)
+        return self._get_by_keys(
+            partition_key_name=pk_name, partition_key_value=pk_value
+        )
 
     def _get_last_items_by_key(self, key_name, key_value, k, scan_index_forward=False):
         """
@@ -291,13 +293,13 @@ class DynamoDBBase:
                 batch.put_item(Item=self.__convert_to_decimal(item))
 
     def _del_by_keys(
-        self, primary_key_name, primary_key_value, sort_key_name, sort_key_value
+        self, partition_key_name, partition_key_value, sort_key_name, sort_key_value
     ):
         """
-        Deletes an item from the DynamoDB table by primary key and sort key.
+        Deletes an item from the DynamoDB table by partition key and sort key.
         """
         self._table.delete_item(
-            Key={primary_key_name: primary_key_value, sort_key_name: sort_key_value}
+            Key={partition_key_name: partition_key_value, sort_key_name: sort_key_value}
         )
 
     def scan(self, **kwargs):

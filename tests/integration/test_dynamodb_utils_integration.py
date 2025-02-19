@@ -153,8 +153,8 @@ class TestDynamoDBIntegrationWithDecimalEncoder(BaseDynamoDBIntegrationTest):
 
         # Delete the item
         self.dynamodb_base._del_by_keys(
-            primary_key_name="id",
-            primary_key_value="123",
+            partition_key_name="id",
+            partition_key_value="123",
             sort_key_name="sort_key",
             sort_key_value=1,
         )
