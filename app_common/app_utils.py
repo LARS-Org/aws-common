@@ -31,6 +31,22 @@ def get_first_non_none(*args, **kwargs):
     )
 
 
+def get_first_non_blank(*args, **kwargs):
+    """
+    Returns the first argument that does not evaluate to a non-blank string, if
+    such an argument exists.
+    """
+
+    return next(
+        (
+            arg
+            for arg in list(args) + list(kwargs.values())
+            if arg is not None and len(str(arg).strip()) > 0
+        ),
+        None,
+    )
+
+
 def get_first_element(lst: list):
     """
     Returns the first element of a list, in case such an element exists.
